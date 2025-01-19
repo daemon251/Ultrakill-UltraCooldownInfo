@@ -1,6 +1,6 @@
 # WARNING
 
-This mod is in development. Expect issues. Contact me at discord: daemon8363 if you encounter problems.
+This mod is in development. Expect issues. Raise an issue on the github or ontact me at discord: daemon8363, preferrably in #ultrakill-modding if you encounter problems.
 
 Mod updates will reset any of the custom sounds that you use for the mod. Keep a seperate copy.
 
