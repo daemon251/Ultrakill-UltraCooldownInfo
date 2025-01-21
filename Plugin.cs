@@ -2,29 +2,55 @@
 using System.IO;
 using System.Reflection;
 using BepInEx;
-
 using UnityEngine;
 using HarmonyLib;
-using System.Runtime.CompilerServices;
 using System;
-using UnityEngine.SocialPlatforms;
 using System.Linq;
-using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 namespace UltraCooldownInfo;
 
 //TO DO:
-//readme
 //icon
 //icon adjustment
 //force update doesnt work on counter
 //null checking
-//overheat doesnt always predict properly
+//custom icon color
+//overheat jumpstart charge issue
 
 [BepInPlugin("UltraCooldownInfo", "UltraCooldownInfo", "0.01")]
 public class Plugin : BaseUnityPlugin
 {    
+    public static Color[] GetVariantColors(float opacity, float colorDeepness)
+    {
+        float r = 0;
+        float g = 0;
+        float b = 0;
+        Dictionary<string, object> localPrefMap = MonoSingleton<PrefsManager>.Instance.prefMap;
+        if(localPrefMap.ContainsKey("hudColor.var0.r") && localPrefMap.ContainsKey("hudColor.var0.g") && localPrefMap.ContainsKey("hudColor.var0.b"))
+        {   
+            //ToSingle is used because (float) cast throws errors
+            r = Convert.ToSingle(localPrefMap["hudColor.var0.r"]);
+            g = Convert.ToSingle(localPrefMap["hudColor.var0.g"]);
+            b = Convert.ToSingle(localPrefMap["hudColor.var0.b"]);
+        }
+        Color var0Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
+        if(localPrefMap.ContainsKey("hudColor.var1.r") && localPrefMap.ContainsKey("hudColor.var1.g") && localPrefMap.ContainsKey("hudColor.var1.b"))
+        {
+            r = Convert.ToSingle(localPrefMap["hudColor.var1.r"]);
+            g = Convert.ToSingle(localPrefMap["hudColor.var1.g"]);
+            b = Convert.ToSingle(localPrefMap["hudColor.var1.b"]);
+        }
+        Color var1Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
+        if(localPrefMap.ContainsKey("hudColor.var2.r") && localPrefMap.ContainsKey("hudColor.var2.g") && localPrefMap.ContainsKey("hudColor.var2.b"))
+        {
+            r = Convert.ToSingle(localPrefMap["hudColor.var2.r"]);
+            g = Convert.ToSingle(localPrefMap["hudColor.var2.g"]);
+            b = Convert.ToSingle(localPrefMap["hudColor.var2.b"]);
+        }
+        Color var2Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
+        Color[] arr = {var0Color, var1Color, var2Color};
+        return arr;
+    }
     public static bool hideGUI = false;
     public static KeyCode showGUIKeyCode = KeyCode.None;
     public static bool showGUIKeyToggle;
@@ -64,6 +90,9 @@ public class Plugin : BaseUnityPlugin
                                                     true,               //18
                                                     true,               //19
                                                     false, false};         //20 21
+    public static int[] arrayVariant0 = {0 ,3 ,7 ,10,13,15,20};
+    public static int[] arrayVariant1 = {1 ,4 ,8 ,11,16,21};
+    public static int[] arrayVariant2 = {2 ,5 ,6 ,9 ,12,17};
     public static UltraCooldownInfoWeapon[] UltraCooldownInfoWeapons = new UltraCooldownInfoWeapon[weaponNames.Length];
     //float[] chargeAmounts = new float[UltraCooldownInfoWeapons.Length];
     //float[] usingChargeAmounts = new float[UltraCooldownInfoWeapons.Length];
@@ -137,15 +166,15 @@ public class Plugin : BaseUnityPlugin
         for(int i = 0; i < UltraCooldownInfoWeapons.Length; i++)
         {
             UltraCooldownInfoWeapons[i] = new UltraCooldownInfoWeapon(needsUseChargeColors[i], needsChargeColors[i], weaponNames[i]);
-            if(i == 12) {UltraCooldownInfoWeapons[i].usingChargeChargedColorEnabled = false;}
+            if(i == 12) {UltraCooldownInfoWeapons[i].usingChargeChargedColorEnabled = false;} //jumpstart nailgun - never fully using charges
         }
         for(int i = 0; i < UltraCooldownInfoWeapons.Length; i++)
         {
             UltraCooldownInfoWeapons[i].chargeAmount = 1.0f;
         }
         PluginConfig.CreateConfig();
-        Harmony harmony = new Harmony("UltraCooldownInfo");
-        harmony.PatchAll();
+        //Harmony harmony = new Harmony("UltraCooldownInfo");
+        //harmony.PatchAll();
         Logger.LogInfo("Plugin UltraCooldownInfo is loaded!");
     }
 
@@ -170,6 +199,34 @@ public class Plugin : BaseUnityPlugin
     Nailgun weapon_attractor, weapon_overheat, weapon_jumpstart;
     RocketLauncher weapon_freezeframe, weapon_srs, weapon_firestarter;
     GameObject weapon, prevWeapon;
+
+    public Texture2D GetTextureByIndex(int i)
+    {
+        Texture2D texture = barTexture;
+        if(i == 0)       {texture = weapon_piercer.altVersion ? weapon_piercerAltTexture : weapon_piercerTexture;}
+        else if(i == 1)  {texture = weapon_marksman.altVersion ? weapon_marksmanAltTexture : weapon_marksmanTexture;}
+        else if(i == 2)  {texture = weapon_sharpshooter.altVersion ? weapon_sharpshooterAltTexture : weapon_sharpshooterTexture;}
+        else if(i == 3)  {texture = weapon_piercerAltTexture;}
+        else if(i == 4)  {texture = weapon_marksmanAltTexture;}
+        else if(i == 5)  {texture = weapon_sharpshooterAltTexture;}
+        else if(i == 6)  {texture = weapon_sawedOn.GetComponent<ShotgunHammer>() == null ? weapon_sawedonTexture : weapon_sawedonAltTexture;} 
+        else if(i == 7)  {texture = weapon_coreejectAltTexture;}
+        else if(i == 8)  {texture = weapon_pumpchargeAltTexture;}
+        else if(i == 9)  {texture = weapon_sawedonAltTexture;}
+        else if(i == 10) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
+        else if(i == 11) {texture = weapon_overheat.altVersion ? weapon_overheatAltTexture : weapon_overheatTexture;}
+        else if(i == 12) {texture = weapon_jumpstart.altVersion ? weapon_jumpstartAltTexture : weapon_jumpstartTexture;}
+        else if(i == 13) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
+        else if(i == 14) {texture = weapon_railcannonTexture;}
+        else if(i == 15) {texture = weapon_freezeframeTexture;}
+        else if(i == 16) {texture = weapon_srsTexture;}
+        else if(i == 17) {texture = weapon_firestarterTexture;}
+        else if(i == 18) {texture = weapon_freezeframeTexture;}
+        else if(i == 19) {texture = weapon_fistTexture;}
+        else if(i == 20) {texture = weapon_coreEject.GetComponent<ShotgunHammer>() == null ? weapon_coreejectTexture : weapon_coreejectAltTexture;}
+        else if(i == 21) {texture = weapon_pumpCharge.GetComponent<ShotgunHammer>() == null ? weapon_pumpchargeTexture : weapon_pumpchargeAltTexture;}
+        return texture;
+    }
 
     public void findWeapons()
     {
@@ -652,8 +709,6 @@ public class Plugin : BaseUnityPlugin
             beforeDrawSegments:;
         }
 
-        //UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness, UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.width + 2 * UCIWepConf.borderThickness, UCIWepConf.height + 2 * UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0);
-        //inefficent
         UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness, UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.width + 2 * UCIWepConf.borderThickness , UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //top
         UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness, UCIWepConf.height + UCIWepConf.yPos, UCIWepConf.width + 2 * UCIWepConf.borderThickness , UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //bottom
         UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness, UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.borderThickness, UCIWepConf.height + 2 * UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //left
@@ -665,62 +720,15 @@ public class Plugin : BaseUnityPlugin
         }
         if(UCIWepConf.iconEnabled == true)
         {
-            Color color = new Color(1,1,1,1);
-            float r = 0;
-            float g = 0;
-            float b = 0;
-            Dictionary<string, object> localPrefMap = MonoSingleton<PrefsManager>.Instance.prefMap;
-            if(localPrefMap.ContainsKey("hudColor.var0.r") && localPrefMap.ContainsKey("hudColor.var0.g") && localPrefMap.ContainsKey("hudColor.var0.b"))
-            {   
-                //ToSingle is used because (float) cast throws errors
-                r = Convert.ToSingle(localPrefMap["hudColor.var0.r"]);
-                g = Convert.ToSingle(localPrefMap["hudColor.var0.g"]);
-                b = Convert.ToSingle(localPrefMap["hudColor.var0.b"]);
-            }
-            Color var0Color = new Color(r,g,b,UCIWepConf.opacity);
-            if(localPrefMap.ContainsKey("hudColor.var1.r") && localPrefMap.ContainsKey("hudColor.var1.g") && localPrefMap.ContainsKey("hudColor.var1.b"))
-            {
-                r = Convert.ToSingle(localPrefMap["hudColor.var1.r"]);
-                g = Convert.ToSingle(localPrefMap["hudColor.var1.g"]);
-                b = Convert.ToSingle(localPrefMap["hudColor.var1.b"]);
-            }
-            Color var1Color = new Color(r,g,b,UCIWepConf.opacity);
-            if(localPrefMap.ContainsKey("hudColor.var2.r") && localPrefMap.ContainsKey("hudColor.var2.g") && localPrefMap.ContainsKey("hudColor.var2.b"))
-            {
-                r = Convert.ToSingle(localPrefMap["hudColor.var2.r"]);
-                g = Convert.ToSingle(localPrefMap["hudColor.var2.g"]);
-                b = Convert.ToSingle(localPrefMap["hudColor.var2.b"]);
-            }
-            Color var2Color = new Color(r,g,b,UCIWepConf.opacity);
+            Color color = UCIWepConf.chargeBarIconColor;
 
             Texture2D texture = barTexture;
-            if(i == 0)       {color = var0Color; texture = weapon_piercer.altVersion ? weapon_piercerAltTexture : weapon_piercerTexture;}
-            else if(i == 1)  {color = var1Color; texture = weapon_marksman.altVersion ? weapon_marksmanAltTexture : weapon_marksmanTexture;}
-            else if(i == 2)  {color = var2Color; texture = weapon_sharpshooter.altVersion ? weapon_sharpshooterAltTexture : weapon_sharpshooterTexture;}
-            else if(i == 3)  {color = var0Color; texture = weapon_piercerAltTexture;}
-            else if(i == 4)  {color = var1Color; texture = weapon_marksmanAltTexture;}
-            else if(i == 5)  {color = var2Color; texture = weapon_sharpshooterAltTexture;}
-            else if(i == 6)  {color = var2Color; texture = weapon_sawedOn.GetComponent<ShotgunHammer>() == null ? weapon_sawedonTexture : weapon_sawedonAltTexture;} 
-            else if(i == 7)  {color = var0Color; texture = weapon_coreejectAltTexture;}
-            else if(i == 8)  {color = var1Color; texture = weapon_pumpchargeAltTexture;}
-            else if(i == 9)  {color = var2Color; texture = weapon_sawedonAltTexture;}
-            else if(i == 10) {color = var0Color; texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-            else if(i == 11) {color = var1Color; texture = weapon_overheat.altVersion ? weapon_overheatAltTexture : weapon_overheatTexture;}
-            else if(i == 12) {color = var2Color; texture = weapon_jumpstart.altVersion ? weapon_jumpstartAltTexture : weapon_jumpstartTexture;}
-            else if(i == 13) {color = var0Color; texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-            else if(i == 14) {color = var0Color; texture = weapon_railcannonTexture;}
-            else if(i == 15) {color = var0Color; texture = weapon_freezeframeTexture;}
-            else if(i == 16) {color = var1Color; texture = weapon_srsTexture;}
-            else if(i == 17) {color = var2Color; texture = weapon_firestarterTexture;}
-            else if(i == 18) {color = var0Color; texture = weapon_freezeframeTexture;}
-            else if(i == 19) {color = var0Color; texture = weapon_fistTexture;}
-            else if(i == 20) {color = var0Color; texture = weapon_coreEject.GetComponent<ShotgunHammer>() == null ? weapon_coreejectTexture : weapon_coreejectAltTexture;}
-            else if(i == 21) {color = var1Color; texture = weapon_pumpCharge.GetComponent<ShotgunHammer>() == null ? weapon_pumpchargeTexture : weapon_pumpchargeAltTexture;}
+            texture = GetTextureByIndex(i);
+
             float barWidth = UCIWepConf.width + UCIWepConf.borderThickness * 2;
             float barHeight = UCIWepConf.height + UCIWepConf.borderThickness * 2;
 
-            float iconWidth = 0f;
-            float iconHeight = 0f;
+            float iconWidth = 0f; float iconHeight = 0f;
 
             float flipXBonux = 0f;
             if(UCIWepConf.flipped == true) {flipXBonux = 1f;}
@@ -755,36 +763,14 @@ public class Plugin : BaseUnityPlugin
     {
         if(tempDisable) {return;}
         UltraCooldownInfoWeapon UCIWepConf = UltraCooldownInfoWeapons[i];
-        Color color1 = new Color(1.0f, 1.0f, 1.0f, 1.0f);
-        Color color2 = new Color(1.0f, 1.0f, 1.0f, 1.0f);
-        Color color3 = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+        Color color1 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //charging
+        Color color2 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //remaining
+        Color color3 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //charged
 
         float fillAmount = UCIWepConf.chargeAmount;
         if(UCIWepConf.chargeAmount >= 1 && UCIWepConf.usingChargeAmount >= 0f) {fillAmount = UCIWepConf.usingChargeAmount;}
 
-        Texture2D texture = barTexture;
-        if(i == 0)       {texture = weapon_piercer.altVersion ? weapon_piercerAltTexture : weapon_piercerTexture;}
-        else if(i == 1)  {texture = weapon_marksman.altVersion ? weapon_marksmanAltTexture : weapon_marksmanTexture;}
-        else if(i == 2)  {texture = weapon_sharpshooter.altVersion ? weapon_sharpshooterAltTexture : weapon_sharpshooterTexture;}
-        else if(i == 3)  {texture = weapon_piercerAltTexture;}
-        else if(i == 4)  {texture = weapon_marksmanAltTexture;}
-        else if(i == 5)  {texture = weapon_sharpshooterAltTexture;}
-        else if(i == 6)  {texture = weapon_sawedOn.GetComponent<ShotgunHammer>() == null ? weapon_sawedonTexture : weapon_sawedonAltTexture;} 
-        else if(i == 7)  {texture = weapon_coreejectAltTexture;}
-        else if(i == 8)  {texture = weapon_pumpchargeAltTexture;}
-        else if(i == 9)  {texture = weapon_sawedonAltTexture;}
-        else if(i == 10) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-        else if(i == 11) {texture = weapon_overheat.altVersion ? weapon_overheatAltTexture : weapon_overheatTexture;}
-        else if(i == 12) {texture = weapon_jumpstart.altVersion ? weapon_jumpstartAltTexture : weapon_jumpstartTexture;}
-        else if(i == 13) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-        else if(i == 14) {texture = weapon_railcannonTexture;}
-        else if(i == 15) {texture = weapon_freezeframeTexture;}
-        else if(i == 16) {texture = weapon_srsTexture;}
-        else if(i == 17) {texture = weapon_firestarterTexture;}
-        else if(i == 18) {texture = weapon_freezeframeTexture;}
-        else if(i == 19) {texture = weapon_fistTexture;}
-        else if(i == 20) {texture = weapon_coreEject.GetComponent<ShotgunHammer>() == null ? weapon_coreejectTexture : weapon_coreejectAltTexture;}
-        else if(i == 21) {texture = weapon_pumpCharge.GetComponent<ShotgunHammer>() == null ? weapon_pumpchargeTexture : weapon_pumpchargeAltTexture;}
+        Texture2D texture = GetTextureByIndex(i);
 
         if(UCIWepConf.chargeAmount < 1)
         {
@@ -835,7 +821,7 @@ public class Plugin : BaseUnityPlugin
             GUI.DrawTexture(new Rect(-UCIWepConf.width * fillAmount, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color2, 0, 0);
             GUI.EndGroup();
         }
-        else
+        else //flipped
         {
             for(int j = 0; j < UCIWepConf.numberDivisions; j++)
             {
@@ -879,26 +865,7 @@ public class Plugin : BaseUnityPlugin
 
         float fillAmount = UCIWepConf.chargeAmount;
         if(UCIWepConf.chargeAmount >= 1) {fillAmount = UCIWepConf.usingChargeAmount;}
-        /*float newR = 0f;
-        float newG = 0f;
-        float newB = 0f;
-        newR = UCIWepConf.chargingColor.r * UCIWepConf.chargeAmount + UCIWepConf.remainingColor.r * (1.0f - UCIWepConf.chargeAmount);
-        newG = UCIWepConf.chargingColor.g * UCIWepConf.chargeAmount + UCIWepConf.remainingColor.g * (1.0f - UCIWepConf.chargeAmount);
-        newB = UCIWepConf.chargingColor.b * UCIWepConf.chargeAmount + UCIWepConf.remainingColor.b * (1.0f - UCIWepConf.chargeAmount);
-        color1 = UCIWepConf.chargingColor; color2 = UCIWepConf.remainingColor;
-        if(UCIWepConf.chargeAmount >= 0.995f) 
-        {
-            newR = UCIWepConf.usingChargeColor.r * UCIWepConf.usingChargeAmount + UCIWepConf.chargedColor.r * (1.0f - UCIWepConf.usingChargeAmount);
-            newG = UCIWepConf.usingChargeColor.g * UCIWepConf.usingChargeAmount + UCIWepConf.chargedColor.g * (1.0f - UCIWepConf.usingChargeAmount);
-            newB = UCIWepConf.usingChargeColor.b * UCIWepConf.usingChargeAmount + UCIWepConf.chargedColor.b * (1.0f - UCIWepConf.usingChargeAmount);
-            color1 = UCIWepConf.usingChargeColor; color2 = UCIWepConf.chargedColor;
-            if(UCIWepConf.usingChargeAmount >= 0.995f) {color1 = UCIWepConf.usingChargeChargedColor; color3 = UCIWepConf.usingChargeChargedColor; goto colorEnd;}
-        }
-        color3 = new Color(newR, newG, newB, UCIWepConf.opacity);
-        colorEnd:;*/
-        float newR = 0f;
-        float newG = 0f;
-        float newB = 0f;
+        float newR = 0f; float newG = 0f; float newB = 0f;
         if(UCIWepConf.chargeAmount < 1)
         {
             color1 = UCIWepConf.chargedColor; 
@@ -935,29 +902,7 @@ public class Plugin : BaseUnityPlugin
             color1 = UCIWepConf.usingChargeChargedColor; color2 = UCIWepConf.usingChargeChargedColor; color3 = UCIWepConf.usingChargeChargedColor;
         }
 
-        Texture2D texture = barTexture;
-        if(i == 0)       {texture = weapon_piercer.altVersion ? weapon_piercerAltTexture : weapon_piercerTexture;}
-        else if(i == 1)  {texture = weapon_marksman.altVersion ? weapon_marksmanAltTexture : weapon_marksmanTexture;}
-        else if(i == 2)  {texture = weapon_sharpshooter.altVersion ? weapon_sharpshooterAltTexture : weapon_sharpshooterTexture;}
-        else if(i == 3)  {texture = weapon_piercerAltTexture;}
-        else if(i == 4)  {texture = weapon_marksmanAltTexture;}
-        else if(i == 5)  {texture = weapon_sharpshooterAltTexture;}
-        else if(i == 6)  {texture = weapon_sawedOn.GetComponent<ShotgunHammer>() == null ? weapon_sawedonTexture : weapon_sawedonAltTexture;} 
-        else if(i == 7)  {texture = weapon_coreejectAltTexture;}
-        else if(i == 8)  {texture = weapon_pumpchargeAltTexture;}
-        else if(i == 9)  {texture = weapon_sawedonAltTexture;}
-        else if(i == 10) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-        else if(i == 11) {texture = weapon_overheat.altVersion ? weapon_overheatAltTexture : weapon_overheatTexture;}
-        else if(i == 12) {texture = weapon_jumpstart.altVersion ? weapon_jumpstartAltTexture : weapon_jumpstartTexture;}
-        else if(i == 13) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-        else if(i == 14) {texture = weapon_railcannonTexture;}
-        else if(i == 15) {texture = weapon_freezeframeTexture;}
-        else if(i == 16) {texture = weapon_srsTexture;}
-        else if(i == 17) {texture = weapon_firestarterTexture;}
-        else if(i == 18) {texture = weapon_freezeframeTexture;}
-        else if(i == 19) {texture = weapon_fistTexture;}
-        else if(i == 20) {texture = weapon_coreEject.GetComponent<ShotgunHammer>() == null ? weapon_coreejectTexture : weapon_coreejectAltTexture;}
-        else if(i == 21) {texture = weapon_pumpCharge.GetComponent<ShotgunHammer>() == null ? weapon_pumpchargeTexture : weapon_pumpchargeAltTexture;}
+        Texture2D texture = GetTextureByIndex(i);;
 
         bool drawnGradient = false;
         if(UCIWepConf.flipped == false)
@@ -989,7 +934,7 @@ public class Plugin : BaseUnityPlugin
                 }
             }
         }
-        else
+        else //flipped
         {
             for(int j = 0; j < UCIWepConf.numberDivisions; j++)
             {
@@ -1019,11 +964,6 @@ public class Plugin : BaseUnityPlugin
             }
         }
 
-        //float flipXBonus = 0f;
-        //if(UCIWepConf.flipped == true) {flipXBonus = 1f;}
-
-        //UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + flipXBonus * UCIWepConf.width, UCIWepConf.yPos, (1.0f - 2.0f * flipXBonus) * UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
-
         if(UCIWepConf.divisionWidth == 0) {return;}
         for(int j = 0; j < UCIWepConf.numberDivisions - 1; j++) //draw lines
         {   //looks like crap but its here anyways
@@ -1037,28 +977,7 @@ public class Plugin : BaseUnityPlugin
     {
         UltraCooldownInfoWeapon UCIWepConf = UltraCooldownInfoWeapons[i];
         Color color = UCIWepConf.colorFlash;
-
-        Texture2D texture = barTexture;
-        if(i == 0)       {texture = weapon_piercer.altVersion ? weapon_piercerAltTexture : weapon_piercerTexture;}
-        else if(i == 1)  {texture = weapon_marksman.altVersion ? weapon_marksmanAltTexture : weapon_marksmanTexture;}
-        else if(i == 2)  {texture = weapon_sharpshooter.altVersion ? weapon_sharpshooterAltTexture : weapon_sharpshooterTexture;}
-        else if(i == 3)  {texture = weapon_piercerAltTexture;}
-        else if(i == 4)  {texture = weapon_marksmanAltTexture;}
-        else if(i == 5)  {texture = weapon_sharpshooterAltTexture;}
-        else if(i == 6)  {texture = weapon_sawedOn.GetComponent<ShotgunHammer>() == null ? weapon_sawedonTexture : weapon_sawedonAltTexture;} 
-        else if(i == 7)  {texture = weapon_coreejectAltTexture;}
-        else if(i == 8)  {texture = weapon_pumpchargeAltTexture;}
-        else if(i == 9)  {texture = weapon_sawedonAltTexture;}
-        else if(i == 10) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-        else if(i == 11) {texture = weapon_overheat.altVersion ? weapon_overheatAltTexture : weapon_overheatTexture;}
-        else if(i == 12) {texture = weapon_jumpstart.altVersion ? weapon_jumpstartAltTexture : weapon_jumpstartTexture;}
-        else if(i == 13) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-        else if(i == 14) {texture = weapon_railcannonTexture;}
-        else if(i == 15) {texture = weapon_freezeframeTexture;}
-        else if(i == 16) {texture = weapon_srsTexture;}
-        else if(i == 17) {texture = weapon_firestarterTexture;}
-        else if(i == 18) {texture = weapon_freezeframeTexture;}
-        else if(i == 19) {texture = weapon_fistTexture;}
+        Texture2D texture = GetTextureByIndex(i);
 
         //not entirely accurate but whaddya gonna do
         bool wasJustCharged = (UCIWepConf.chargeAmount >= 1f) || UCIWepConf.chargeAmount < 1.0f / UCIWepConf.numberFlashes; 
@@ -1082,9 +1001,7 @@ public class Plugin : BaseUnityPlugin
     }
     void OnGUI() //called every frame
     {
-        if(!modEnabled){return;}
-        if(!IsGameplayScene()){return;}
-        if(IsMenu()){return;}
+        if(!modEnabled || !IsGameplayScene() || IsMenu()){return;}
         if(MonoSingleton<NewMovement>.Instance.hp <= 0) {return;} //dont display this when dead cause it draws over everything if enabled
 
         for(int i = 0; i < UltraCooldownInfoWeapons.Length; i++)
@@ -1104,10 +1021,6 @@ public class Plugin : BaseUnityPlugin
                 {
                     DrawWeaponImageGradientHUDElement(i);
                 }
-            }
-            if(UCIWepConf.iconFlashEnabled == true)
-            {
-                tryDrawFlashingIcon(i);
             }
         }
     }

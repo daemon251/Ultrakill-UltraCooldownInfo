@@ -38,6 +38,5 @@ C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.0\UltraCoo.A55C022C.Up2Date
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.0\UltraCooldownInfo.dll
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.0\UltraCooldownInfo.pdb
-C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\bin\Debug\netstandard2.0\UKEnemyIdentifier.dll
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\bin\Debug\netstandard2.0\Assembly-CSharp.dll
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.0\UltraCooldownInfo.IgnoresAccessChecksTo.cs

@@ -1,13 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Xml.Serialization;
 using PluginConfig.API;
 using PluginConfig.API.Decorators;
 using PluginConfig.API.Fields;
 using PluginConfig.API.Functionals;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace UltraCooldownInfo;
 
@@ -27,6 +27,7 @@ public class UltraCooldownInfoWeapon
     public bool iconEnabled = false;
     public int iconDistance = 0;
     public bool flipped = false;
+    public Color chargeBarIconColor = new Color(1.0f,1.0f,1.0f);
     public Color backgroundColor = new Color(1.0f, 1.0f, 1.0f);
     public float backgroundOpacity = 1.0f;
     public float opacity = 1.0f;
@@ -271,10 +272,7 @@ public class PluginConfig
 	}
     public static string DefaultParentFolder = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}";                                                                   //19
 
-    public enum SoundEnum
-    {
-        None, CustomSound1, CustomSound2, CustomSound3, CustomSound4, CustomSound5, CustomSound6, CustomSound7, CustomSound8
-    }
+    public enum SoundEnum{None, CustomSound1, CustomSound2, CustomSound3, CustomSound4, CustomSound5, CustomSound6, CustomSound7, CustomSound8}
     public static string convertSoundEnumToFile(SoundEnum value)
     {
         string sound = "";
@@ -289,9 +287,10 @@ public class PluginConfig
         
         return sound;
     }
-
     public static void OpenSoundFolder() {Application.OpenURL(DefaultParentFolder);}
-    
+
+    public static bool settingsColorsActivated = true;
+
     public static void CreateConfig()
     {
         var config = PluginConfigurator.Create("UltraCooldownInfo", "UltraCooldownInfo");
@@ -313,6 +312,10 @@ public class PluginConfig
         showKeyToggleField.onValueChange += (BoolField.BoolValueChangeEvent e) => {Plugin.showGUIKeyToggle = e.value;};
         Plugin.showGUIKeyToggle = showKeyToggleField.value;
 
+        BoolField settingsColorsActivatedField = new BoolField(globalSettingsPanel, "Setng. Panel Colors (Must restart)", "settingsColorsActivated", true);
+        settingsColorsActivatedField.onValueChange += (BoolField.BoolValueChangeEvent e) => {settingsColorsActivated = e.value;};
+        settingsColorsActivated = settingsColorsActivatedField.value;
+
         ConfigDivision division = new ConfigDivision(config.rootPanel, "division");
 
         modEnabledField.onValueChange += (BoolField.BoolValueChangeEvent e) => {Plugin.modEnabled = e.value; division.interactable = e.value;};
@@ -326,18 +329,43 @@ public class PluginConfig
         {
             UltraCooldownInfoWeapon UCIWepConf = Plugin.UltraCooldownInfoWeapons[i];
 
-            if(i == 0)       {new ConfigHeader(division, "Revolver Alt Fire");}
-            else if(i == 3)  {new ConfigHeader(division, "Slab Revolver Primary Fire");}
-            else if(i == 20)  {new ConfigHeader(division, "Shotgun Alt Fire");}
-            else if(i == 7)  {new ConfigHeader(division, "Jackhammer Primary Fire");}
-            else if(i == 10) {new ConfigHeader(division, "Nailgun/Saw Alt Fire");}
-            else if(i == 13) {new ConfigHeader(division, "Nailgun/Saw Primary Fire");}
-            else if(i == 14) {new ConfigHeader(division, "Railcannon Fire");}
-            else if(i == 15) {new ConfigHeader(division, "Rocket Launcher Alt Fire");}
-            else if(i == 18) {new ConfigHeader(division, "Rocket Launcher Primary Fire");}
-            else if(i == 19) {new ConfigHeader(division, "Misc.");}
+            Color redColor = new Color(1,0.7f,0.7f);
+            Color greenColor = new Color(0.7f,1,0.7f);
+            Color blueColor = new Color(0.7f,0.7f,1);
+
+            if(settingsColorsActivated == false)
+            {
+                redColor = Color.white;
+                greenColor = Color.white;
+                blueColor = Color.white;
+            }
+
+            if(i == 0)       {new ConfigHeader(division, "Revolver Alt Fire").textColor = blueColor;}
+            else if(i == 3)  {new ConfigHeader(division, "Slab Revolver Primary Fire").textColor = redColor;}
+            else if(i == 20) {new ConfigHeader(division, "Shotgun Alt Fire").textColor = blueColor;}
+            else if(i == 7)  {new ConfigHeader(division, "Jackhammer Primary Fire").textColor = redColor;}
+            else if(i == 10) {new ConfigHeader(division, "Nailgun/Saw Alt Fire").textColor = blueColor;}
+            else if(i == 13) {new ConfigHeader(division, "Nailgun/Saw Primary Fire").textColor = redColor;}
+            else if(i == 14) {new ConfigHeader(division, "Railcannon Fire").textColor = greenColor;}
+            else if(i == 15) {new ConfigHeader(division, "Rocket Launcher Alt Fire").textColor = blueColor;}
+            else if(i == 18) {new ConfigHeader(division, "Rocket Launcher Primary Fire").textColor = redColor;}
+            else if(i == 19) {new ConfigHeader(division, "Misc.").textColor = greenColor;}
+
+            Color[] variantColors = Plugin.GetVariantColors(1f, 0.3f);
+            Color panelColor = new Color(0.1f,0.1f,0.1f); //default dark grey
+            if(settingsColorsActivated)
+            {
+                if(Plugin.arrayVariant0.Contains(i)) {panelColor = variantColors[0];}
+                else if(Plugin.arrayVariant1.Contains(i)) {panelColor = variantColors[1];}
+                else if(Plugin.arrayVariant2.Contains(i)) {panelColor = variantColors[2];}
+            }
+            else
+            {
+                panelColor = new Color(0.0f,0.0f,0.0f); //black if disabled
+            }
 
             ConfigPanel newPanel = new ConfigPanel(division, UCIWepConf.name, UCIWepConf.name.Replace(" ", string.Empty) + "Panel");
+            newPanel.fieldColor = panelColor;
 
             ConfigPanel newChargeBarPanel = new ConfigPanel(newPanel, "Charge Bar", UCIWepConf.name.Replace(" ", string.Empty) + "ChargeBarPanel");
 
@@ -379,15 +407,15 @@ public class PluginConfig
             ColorField chargingColorField = null;
             if(UCIWepConf.chargeColors == true)
             {
-                remainingColorField = new ColorField(newChargeBarPanel, "Remaining Charge Color", UCIWepConf.name.Replace(" ", string.Empty) + "RemainingColor", new Color(1.0f, 0f, 0f));
+                remainingColorField = new ColorField(newChargeBarPanel, "Remaining Cooldown Charge Color", UCIWepConf.name.Replace(" ", string.Empty) + "RemainingColor", new Color(1.0f, 0f, 0f));
                 remainingColorField.onValueChange += (ColorField.ColorValueChangeEvent e) => {UCIWepConf.remainingColor = new Color(e.value.r, e.value.g, e.value.b, UCIWepConf.opacity);};
                 UCIWepConf.remainingColor = new Color(remainingColorField.value.r, remainingColorField.value.g, remainingColorField.value.b, UCIWepConf.opacity);
 
-                chargingColorField = new ColorField(newChargeBarPanel, "Charging Color", UCIWepConf.name.Replace(" ", string.Empty) + "ChargingColor", new Color(0.0f, 1.0f, 0f));
+                chargingColorField = new ColorField(newChargeBarPanel, "Charging Cooldown Color", UCIWepConf.name.Replace(" ", string.Empty) + "ChargingColor", new Color(0.0f, 1.0f, 0f));
                 chargingColorField.onValueChange += (ColorField.ColorValueChangeEvent e) => {UCIWepConf.chargingColor = new Color(e.value.r, e.value.g, e.value.b, UCIWepConf.opacity);};
                 UCIWepConf.chargingColor = new Color(chargingColorField.value.r, chargingColorField.value.g, chargingColorField.value.b, UCIWepConf.opacity);
             }
-            ColorField chargedColorField = new ColorField(newChargeBarPanel, "Charged Color", UCIWepConf.name.Replace(" ", string.Empty) + "ChargedColor", new Color(0.0f, 0.7f, 0.0f));
+            ColorField chargedColorField = new ColorField(newChargeBarPanel, "Cooldown Charged Color", UCIWepConf.name.Replace(" ", string.Empty) + "ChargedColor", new Color(0.0f, 0.7f, 0.0f));
             chargedColorField.onValueChange += (ColorField.ColorValueChangeEvent e) => {UCIWepConf.chargedColor = new Color(e.value.r, e.value.g, e.value.b, UCIWepConf.opacity);};
             UCIWepConf.chargedColor = new Color(chargedColorField.value.r, chargedColorField.value.g, chargedColorField.value.b, UCIWepConf.opacity);
 
@@ -419,6 +447,14 @@ public class PluginConfig
                 }
                 Plugin.normalSharpshooterBackgroundChargingColor = new Color(Plugin.normalSharpshooterBackgroundChargingColor.r,Plugin.normalSharpshooterBackgroundChargingColor.g,Plugin.normalSharpshooterBackgroundChargingColor.b, UCIWepConf.opacity);
             };
+
+            if(i == 2) //special case
+            {
+                ColorField normalMarksmanBackgroundChargingColorField = new ColorField(newChargeBarPanel, "Backgrnd. Charging Color (normal var.)", UCIWepConf.name.Replace(" ", string.Empty) + "SharpshooterBackgroundChargingColor", new Color(0.5f,0.5f,0.5f, UCIWepConf.opacity));
+                normalMarksmanBackgroundChargingColorField.onValueChange += (ColorField.ColorValueChangeEvent e) => {Plugin.normalSharpshooterBackgroundChargingColor = new Color(e.value.r,e.value.g,e.value.b, UCIWepConf.opacity);};
+                Plugin.normalSharpshooterBackgroundChargingColor = new Color(normalMarksmanBackgroundChargingColorField.value.r,normalMarksmanBackgroundChargingColorField.value.g,normalMarksmanBackgroundChargingColorField.value.b, UCIWepConf.opacity);
+            }
+
             EnumField<ChargeBarTypeEnum> ChargeBarTypeField = new  EnumField<ChargeBarTypeEnum>(newChargeBarPanel, "Type of Charge Bar", UCIWepConf.name.Replace(" ", string.Empty) + "ChargeBarType", ChargeBarTypeEnum.WeaponImageSplit);
             ChargeBarTypeField.SetEnumDisplayName(ChargeBarTypeEnum.WeaponImageSplit, "Weapon Image - Split");
             ChargeBarTypeField.SetEnumDisplayName(ChargeBarTypeEnum.WeaponImageGradient, "Weapon Image - Gradient");
@@ -455,6 +491,16 @@ public class PluginConfig
             iconDistanceField.onValueChange += (IntField.IntValueChangeEvent e) => {UCIWepConf.iconDistance = e.value;};
             UCIWepConf.iconDistance = iconDistanceField.value;
 
+            Color color = new Color(0f,0f,0f);
+            Color[] variationColors = Plugin.GetVariantColors(UCIWepConf.opacity, 1f);
+            if(Plugin.arrayVariant0.Contains(i)) {color = variationColors[0];}
+            else if(Plugin.arrayVariant1.Contains(i)) {color = variationColors[1];}
+            else if(Plugin.arrayVariant2.Contains(i)) {color = variationColors[2];}
+
+            ColorField chargeBarIconColorField = new ColorField(ChargeExtraSettingsDivision, "Icon Color", UCIWepConf.name.Replace(" ", string.Empty) + "ChargeBarIconColor", color);
+            chargeBarIconColorField.onValueChange += (ColorField.ColorValueChangeEvent e) => {UCIWepConf.chargeBarIconColor = e.value;};
+            UCIWepConf.chargeBarIconColor = chargeBarIconColorField.value;
+
             IntField borderThicknessField = new IntField(ChargeExtraSettingsDivision, "Border Thickness (px)", UCIWepConf.name.Replace(" ", string.Empty) + "BorderThickness", 0, 0, 1000000);
             borderThicknessField.onValueChange += (IntField.IntValueChangeEvent e) => {UCIWepConf.borderThickness = e.value;};
             UCIWepConf.borderThickness = borderThicknessField.value;
@@ -466,18 +512,14 @@ public class PluginConfig
             backgroundColorField.onValueChange += (ColorField.ColorValueChangeEvent e) => {UCIWepConf.backgroundColor = new Color(e.value.r,e.value.g,e.value.b, UCIWepConf.backgroundOpacity);};
             UCIWepConf.backgroundColor = new Color(backgroundColorField.value.r,backgroundColorField.value.g,backgroundColorField.value.b, UCIWepConf.backgroundOpacity);
 
-            if(i == 2) //special case
-            {
-                ColorField normalMarksmanBackgroundChargingColorField = new ColorField(newChargeBarPanel, "Backgrnd. Charging Color (normal var.)", UCIWepConf.name.Replace(" ", string.Empty) + "SharpshooterBackgroundChargingColor", new Color(0.5f,0.5f,0.5f, UCIWepConf.opacity));
-                normalMarksmanBackgroundChargingColorField.onValueChange += (ColorField.ColorValueChangeEvent e) => {Plugin.normalSharpshooterBackgroundChargingColor = new Color(e.value.r,e.value.g,e.value.b, UCIWepConf.opacity);};
-                Plugin.normalSharpshooterBackgroundChargingColor = new Color(normalMarksmanBackgroundChargingColorField.value.r,normalMarksmanBackgroundChargingColorField.value.g,normalMarksmanBackgroundChargingColorField.value.b, UCIWepConf.opacity);
-            }
-
             /////////
             //SOUND//
             /////////
 
             ConfigPanel newSoundPanel = new ConfigPanel(newPanel, "Sound Alert", UCIWepConf.name.Replace(" ", string.Empty) + "SoundPanel");
+
+            ConfigHeader warningHeader2 = new ConfigHeader(newSoundPanel, "This weapon must be equipped for proper functionality.");
+            warningHeader2.textSize = 16;
 
             BoolField enableSoundField = new BoolField(newSoundPanel, "Sound Enabled", UCIWepConf.name.Replace(" ", string.Empty) + "SoundEnabled", false);
             enableSoundField.onValueChange += (BoolField.BoolValueChangeEvent e) => {UCIWepConf.soundEnabled = e.value;};
@@ -510,6 +552,9 @@ public class PluginConfig
                 UCIWepConf.filePathUsingCharge = convertSoundEnumToFile(UsingChargeSoundField.value);
             }
 
+            ConfigHeader warningHeaderFiles = new ConfigHeader(newSoundPanel, "Keep backups of your sounds, they will be overwritten when the mod is updated.");
+            warningHeaderFiles.textSize = 16;
+
             ButtonField openSoundsFolderField = new ButtonField(newSoundPanel, "Open Sounds Folder", "button.openfolder");
             openSoundsFolderField.onClick += new ButtonField.OnClick(OpenSoundFolder);
 
@@ -518,6 +563,9 @@ public class PluginConfig
             //////////////
 
             ConfigPanel flashingIconPanel = new ConfigPanel(newPanel, "Flashing Icon", UCIWepConf.name.Replace(" ", string.Empty) + "FlashingIconPanel");
+
+            ConfigHeader warningHeader3 = new ConfigHeader(flashingIconPanel, "This weapon must be equipped for proper functionality.");
+            warningHeader3.textSize = 16;
 
             BoolField flashingIconEnabledField = new BoolField(flashingIconPanel, "Enabled", UCIWepConf.name.Replace(" ", string.Empty) + "flashingIconEnabled", false);
             flashingIconEnabledField.onValueChange += (BoolField.BoolValueChangeEvent e) => {UCIWepConf.iconFlashEnabled = e.value;};

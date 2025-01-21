@@ -4,12 +4,10 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
-using UKEnemyIdentifier;
 
 namespace UltraCooldownInfo
 {
     //ADAPTED FROM https://github.com/GAMINGNOOBdev/UltraRankSounds/tree/master
-    //dont believe this needs to be an object, change later
     public class CustomSoundPlayer : MonoBehaviour
     {
         private static CustomSoundPlayer _instance = null;
