@@ -10,12 +10,12 @@ using System.Linq;
 namespace UltraCooldownInfo;
 
 //TO DO:
-//icon
 //icon adjustment
 //force update doesnt work on counter
 //null checking
 //custom icon color
 //overheat jumpstart charge issue
+//show icons in menu toggle
 
 [BepInPlugin("UltraCooldownInfo", "UltraCooldownInfo", "0.01")]
 public class Plugin : BaseUnityPlugin
@@ -25,8 +25,9 @@ public class Plugin : BaseUnityPlugin
         float r = 0;
         float g = 0;
         float b = 0;
-        Dictionary<string, object> localPrefMap = MonoSingleton<PrefsManager>.Instance.prefMap;
-        if(localPrefMap.ContainsKey("hudColor.var0.r") && localPrefMap.ContainsKey("hudColor.var0.g") && localPrefMap.ContainsKey("hudColor.var0.b"))
+        //null for now because it causes issues if properly defined
+        Dictionary<string, object> localPrefMap = null;// MonoSingleton<PrefsManager>.Instance.prefMap;
+        if(localPrefMap != null && localPrefMap.ContainsKey("hudColor.var0.r") && localPrefMap.ContainsKey("hudColor.var0.g") && localPrefMap.ContainsKey("hudColor.var0.b"))
         {   
             //ToSingle is used because (float) cast throws errors
             r = Convert.ToSingle(localPrefMap["hudColor.var0.r"]);
@@ -34,14 +35,14 @@ public class Plugin : BaseUnityPlugin
             b = Convert.ToSingle(localPrefMap["hudColor.var0.b"]);
         }
         Color var0Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
-        if(localPrefMap.ContainsKey("hudColor.var1.r") && localPrefMap.ContainsKey("hudColor.var1.g") && localPrefMap.ContainsKey("hudColor.var1.b"))
+        if(localPrefMap != null && localPrefMap.ContainsKey("hudColor.var1.r") && localPrefMap.ContainsKey("hudColor.var1.g") && localPrefMap.ContainsKey("hudColor.var1.b"))
         {
             r = Convert.ToSingle(localPrefMap["hudColor.var1.r"]);
             g = Convert.ToSingle(localPrefMap["hudColor.var1.g"]);
             b = Convert.ToSingle(localPrefMap["hudColor.var1.b"]);
         }
         Color var1Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
-        if(localPrefMap.ContainsKey("hudColor.var2.r") && localPrefMap.ContainsKey("hudColor.var2.g") && localPrefMap.ContainsKey("hudColor.var2.b"))
+        if(localPrefMap != null && localPrefMap.ContainsKey("hudColor.var2.r") && localPrefMap.ContainsKey("hudColor.var2.g") && localPrefMap.ContainsKey("hudColor.var2.b"))
         {
             r = Convert.ToSingle(localPrefMap["hudColor.var2.r"]);
             g = Convert.ToSingle(localPrefMap["hudColor.var2.g"]);
@@ -55,6 +56,7 @@ public class Plugin : BaseUnityPlugin
     public static KeyCode showGUIKeyCode = KeyCode.None;
     public static bool showGUIKeyToggle;
     public static bool modEnabled = true;
+    public static bool showIconsInMenu = false;
     public static string DefaultParentFolder = $"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}";
     string barImageFile = $"{Path.Combine(DefaultParentFolder!, "bar.png")}";
     public static string[] weaponNames = {  "Piercer Revolver Alt", "Marksman Revolver Alt", "Sharpshooter Revolver Alt",                       //0 1 2
@@ -233,7 +235,6 @@ public class Plugin : BaseUnityPlugin
         if(weapon != MonoSingleton<GunControl>.Instance.currentWeapon) {prevWeapon = weapon;}
         weapon = MonoSingleton<GunControl>.Instance.currentWeapon;
 
-        //does this lag?
         foreach (GameObject go in MonoSingleton<GunControl>.Instance.slot1)
         {
             if(go.GetComponent<Revolver>().gunVariation == 0) {weapon_piercer = go.GetComponent<Revolver>();}
@@ -821,7 +822,7 @@ public class Plugin : BaseUnityPlugin
             GUI.DrawTexture(new Rect(-UCIWepConf.width * fillAmount, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color2, 0, 0);
             GUI.EndGroup();
         }
-        else //flipped
+        else //flipped 
         {
             for(int j = 0; j < UCIWepConf.numberDivisions; j++)
             {
@@ -1001,7 +1002,7 @@ public class Plugin : BaseUnityPlugin
     }
     void OnGUI() //called every frame
     {
-        if(!modEnabled || !IsGameplayScene() || IsMenu()){return;}
+        if(!modEnabled || !IsGameplayScene() || (IsMenu() && showIconsInMenu == false)){return;}
         if(MonoSingleton<NewMovement>.Instance.hp <= 0) {return;} //dont display this when dead cause it draws over everything if enabled
 
         for(int i = 0; i < UltraCooldownInfoWeapons.Length; i++)

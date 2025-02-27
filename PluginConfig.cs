@@ -316,6 +316,10 @@ public class PluginConfig
         settingsColorsActivatedField.onValueChange += (BoolField.BoolValueChangeEvent e) => {settingsColorsActivated = e.value;};
         settingsColorsActivated = settingsColorsActivatedField.value;
 
+        BoolField showIconsInMenuField = new BoolField(globalSettingsPanel, "Show UI in menu?", "ShowIconsInMenu", false);
+        showIconsInMenuField.onValueChange += (BoolField.BoolValueChangeEvent e) => {Plugin.showIconsInMenu = e.value;};
+        Plugin.showIconsInMenu = showIconsInMenuField.value;
+
         ConfigDivision division = new ConfigDivision(config.rootPanel, "division");
 
         modEnabledField.onValueChange += (BoolField.BoolValueChangeEvent e) => {Plugin.modEnabled = e.value; division.interactable = e.value;};
