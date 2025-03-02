@@ -74,7 +74,7 @@ public class UltraCooldownInfoWeapon
     public float usingChargeAmount = -1f;
     public string name = "UltraCooldownInfo - YOU SHOULD NEVER SEE THIS";
 
-    public UltraCooldownInfoWeapon(bool usingChargeColors, bool chargeColors, string name)
+    public UltraCooldownInfoWeapon(bool usingChargeColors, bool chargeColors, string name) 
     {
         this.usingChargeColors = usingChargeColors;
         this.chargeColors = chargeColors;

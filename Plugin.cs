@@ -327,18 +327,18 @@ public class Plugin : BaseUnityPlugin
     {
         //Sawed-On Shotgun Alt -- WORKS
         UltraCooldownInfoWeapons[6].chargeAmount = MonoSingleton<WeaponCharges>.Instance.shoSawCharge;
-        if(weapon_sawedOn.GetComponent<Shotgun>() != null)
+        if(weapon_sawedOn != null && weapon_sawedOn.GetComponent<Shotgun>() != null)
         {
             UltraCooldownInfoWeapons[6].usingChargeAmount = weapon_sawedOn.GetComponent<Shotgun>().grenadeForce / 60f;
         }
-        else if(weapon_sawedOn.GetComponent<ShotgunHammer>() != null)
+        else if(weapon_sawedOn != null && weapon_sawedOn.GetComponent<ShotgunHammer>() != null)
         {
             UltraCooldownInfoWeapons[6].usingChargeAmount = weapon_sawedOn.GetComponent<ShotgunHammer>().chargeForce / 60f;
         }
         
         //Core Eject Jackhammer Fire -- WORKS
         UltraCooldownInfoWeapons[7].chargeAmount = (7.0f - MonoSingleton<WeaponCharges>.Instance.shoaltcooldowns[0]) / 7.0f; 
-        if(weapon_coreEject.GetComponent<ShotgunHammer>() != null)
+        if(weapon_coreEject != null && weapon_coreEject.GetComponent<ShotgunHammer>() != null)
         {
             UltraCooldownInfoWeapons[7].usingChargeAmount = weapon_coreEject.GetComponent<ShotgunHammer>().swingCharge;
         }
@@ -346,21 +346,21 @@ public class Plugin : BaseUnityPlugin
         
         //Pump Charge Jackhammer Fire -- WORKS
         UltraCooldownInfoWeapons[8].chargeAmount = (7.0f - MonoSingleton<WeaponCharges>.Instance.shoaltcooldowns[1]) / 7.0f; 
-        if(weapon_pumpCharge.GetComponent<ShotgunHammer>() != null)
+        if(weapon_pumpCharge != null && weapon_pumpCharge.GetComponent<ShotgunHammer>() != null)
         {
             UltraCooldownInfoWeapons[8].usingChargeAmount = weapon_pumpCharge.GetComponent<ShotgunHammer>().swingCharge;
         }
         else {UltraCooldownInfoWeapons[8].usingChargeAmount = -1f;}
         //Sawed-On Jackhammer Fire -- WORKS
         UltraCooldownInfoWeapons[9].chargeAmount = (7.0f - MonoSingleton<WeaponCharges>.Instance.shoaltcooldowns[2]) / 7.0f; 
-        if(weapon_sawedOn.GetComponent<ShotgunHammer>() != null)
+        if(weapon_sawedOn != null && weapon_sawedOn.GetComponent<ShotgunHammer>() != null)
         {
             UltraCooldownInfoWeapons[9].usingChargeAmount = weapon_sawedOn.GetComponent<ShotgunHammer>().swingCharge;
         }
         else {UltraCooldownInfoWeapons[9].usingChargeAmount = -1f;}
 
         //Core Eject Alt -- 
-        if(weapon_coreEject.GetComponent<Shotgun>() != null)
+        if(weapon_coreEject != null && weapon_coreEject.GetComponent<Shotgun>() != null)
         {
             UltraCooldownInfoWeapons[20].usingChargeAmount = weapon_coreEject.GetComponent<Shotgun>().grenadeForce / 60f;
         }
@@ -368,7 +368,7 @@ public class Plugin : BaseUnityPlugin
         {
             UltraCooldownInfoWeapons[20].usingChargeAmount = 0f;
         }
-        if(weapon_coreEject.GetComponent<ShotgunHammer>() != null)
+        if(weapon_coreEject != null && weapon_coreEject.GetComponent<ShotgunHammer>() != null)
         {
             UltraCooldownInfoWeapons[20].chargeAmount = MonoSingleton<WeaponCharges>.Instance.shoAltNadeCharge;
         }
@@ -378,11 +378,11 @@ public class Plugin : BaseUnityPlugin
         }
         //Pump Charge Alt -- 
         UltraCooldownInfoWeapons[21].chargeAmount = 1f;
-        if(weapon_pumpCharge.GetComponent<Shotgun>() != null)
+        if(weapon_pumpCharge != null && weapon_pumpCharge.GetComponent<Shotgun>() != null)
         {
             UltraCooldownInfoWeapons[21].usingChargeAmount = weapon_pumpCharge.GetComponent<Shotgun>().primaryCharge / 3.0f;
         }
-        else if(weapon_pumpCharge.GetComponent<ShotgunHammer>() != null) 
+        else if(weapon_pumpCharge != null && weapon_pumpCharge.GetComponent<ShotgunHammer>() != null) 
         {
             UltraCooldownInfoWeapons[21].usingChargeAmount = weapon_pumpCharge.GetComponent<ShotgunHammer>().primaryCharge / 3.0f;
         }
