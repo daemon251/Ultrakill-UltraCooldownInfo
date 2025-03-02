@@ -165,7 +165,7 @@ public class Plugin : BaseUnityPlugin
 
     public static bool IsMenu()
     {
-        if(!MonoSingleton<OptionsManager>.Instance.paused && !MonoSingleton<FistControl>.Instance.shopping && !GameStateManager.Instance.PlayerInputLocked)
+        if(MonoSingleton<OptionsManager>.Instance != null && !MonoSingleton<OptionsManager>.Instance.paused && !MonoSingleton<FistControl>.Instance.shopping && GameStateManager.Instance != null && !GameStateManager.Instance.PlayerInputLocked)
         {
             return false;
         }
