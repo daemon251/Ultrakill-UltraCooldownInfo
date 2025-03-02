@@ -22,33 +22,9 @@ public class Plugin : BaseUnityPlugin
 {    
     public static Color[] GetVariantColors(float opacity, float colorDeepness)
     {
-        float r = 0;
-        float g = 0;
-        float b = 0;
-        //null for now because it causes issues if properly defined
-        Dictionary<string, object> localPrefMap = null;// MonoSingleton<PrefsManager>.Instance.prefMap;
-        if(localPrefMap != null && localPrefMap.ContainsKey("hudColor.var0.r") && localPrefMap.ContainsKey("hudColor.var0.g") && localPrefMap.ContainsKey("hudColor.var0.b"))
-        {   
-            //ToSingle is used because (float) cast throws errors
-            r = Convert.ToSingle(localPrefMap["hudColor.var0.r"]);
-            g = Convert.ToSingle(localPrefMap["hudColor.var0.g"]);
-            b = Convert.ToSingle(localPrefMap["hudColor.var0.b"]);
-        }
-        Color var0Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
-        if(localPrefMap != null && localPrefMap.ContainsKey("hudColor.var1.r") && localPrefMap.ContainsKey("hudColor.var1.g") && localPrefMap.ContainsKey("hudColor.var1.b"))
-        {
-            r = Convert.ToSingle(localPrefMap["hudColor.var1.r"]);
-            g = Convert.ToSingle(localPrefMap["hudColor.var1.g"]);
-            b = Convert.ToSingle(localPrefMap["hudColor.var1.b"]);
-        }
-        Color var1Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
-        if(localPrefMap != null && localPrefMap.ContainsKey("hudColor.var2.r") && localPrefMap.ContainsKey("hudColor.var2.g") && localPrefMap.ContainsKey("hudColor.var2.b"))
-        {
-            r = Convert.ToSingle(localPrefMap["hudColor.var2.r"]);
-            g = Convert.ToSingle(localPrefMap["hudColor.var2.g"]);
-            b = Convert.ToSingle(localPrefMap["hudColor.var2.b"]);
-        }
-        Color var2Color = new Color(r * colorDeepness,g * colorDeepness,b * colorDeepness,opacity);
+        Color var0Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].b * colorDeepness);
+        Color var1Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].b * colorDeepness);
+        Color var2Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].b * colorDeepness);
         Color[] arr = {var0Color, var1Color, var2Color};
         return arr;
     }
@@ -174,7 +150,7 @@ public class Plugin : BaseUnityPlugin
         {
             UltraCooldownInfoWeapons[i].chargeAmount = 1.0f;
         }
-        PluginConfig.CreateConfig();
+        //config has to be created in update because jank
         //Harmony harmony = new Harmony("UltraCooldownInfo");
         //harmony.PatchAll();
         Logger.LogInfo("Plugin UltraCooldownInfo is loaded!");
@@ -600,9 +576,14 @@ public class Plugin : BaseUnityPlugin
     }
 
     bool tempDisable = false;
-
+    bool configCreated = false;
     public void Update() 
     {
+        if(configCreated == false && MonoSingleton<ColorBlindSettings>.Instance != null)
+        {
+            PluginConfig.CreateConfig();
+            configCreated = true;
+        }
         if(!modEnabled){return;}
         if(!IsGameplayScene()){return;}
         if(IsMenu()){return;}
@@ -974,7 +955,7 @@ public class Plugin : BaseUnityPlugin
             GUI.EndGroup();
         }
     }
-    public void tryDrawFlashingIcon(int i) //draw if cooldown just hit max
+    public void tryDrawFlashingIcon(int i)
     {
         UltraCooldownInfoWeapon UCIWepConf = UltraCooldownInfoWeapons[i];
         Color color = UCIWepConf.colorFlash;
@@ -1021,6 +1002,10 @@ public class Plugin : BaseUnityPlugin
                 else if(UCIWepConf.chargeBarType == ChargeBarTypeEnum.WeaponImageGradient)
                 {
                     DrawWeaponImageGradientHUDElement(i);
+                }
+                if(flashingIconOpacities[i] > 0)
+                {
+                    tryDrawFlashingIcon(i);
                 }
             }
         }

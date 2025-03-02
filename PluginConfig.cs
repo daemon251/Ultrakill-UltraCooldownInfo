@@ -529,7 +529,7 @@ public class PluginConfig
             enableSoundField.onValueChange += (BoolField.BoolValueChangeEvent e) => {UCIWepConf.soundEnabled = e.value;};
             UCIWepConf.soundEnabled = enableSoundField.value;
 
-            BoolField enableSoundWhileHeldField = new BoolField(newSoundPanel, "Finish Sound Play When Held", UCIWepConf.name.Replace(" ", string.Empty) + "SoundEnabledWhileHeld", false);
+            BoolField enableSoundWhileHeldField = new BoolField(newSoundPanel, "Still Play Sound When Held", UCIWepConf.name.Replace(" ", string.Empty) + "SoundEnabledWhileHeld", false);
             enableSoundWhileHeldField.onValueChange += (BoolField.BoolValueChangeEvent e) => {UCIWepConf.soundEnabledWhileHeld = e.value;};
             UCIWepConf.soundEnabledWhileHeld = enableSoundWhileHeldField.value;
 
