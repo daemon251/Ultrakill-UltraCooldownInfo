@@ -12,10 +12,8 @@ namespace UltraCooldownInfo;
 //TO DO:
 //icon adjustment
 //force update doesnt work on counter
-//null checking
 //custom icon color
 //overheat jumpstart charge issue
-//show icons in menu toggle
 
 [BepInPlugin("UltraCooldownInfo", "UltraCooldownInfo", "0.01")]
 public class Plugin : BaseUnityPlugin
@@ -165,7 +163,7 @@ public class Plugin : BaseUnityPlugin
 
     public static bool IsMenu()
     {
-        if(MonoSingleton<OptionsManager>.Instance != null && !MonoSingleton<OptionsManager>.Instance.paused && !MonoSingleton<FistControl>.Instance.shopping && GameStateManager.Instance != null && !GameStateManager.Instance.PlayerInputLocked)
+        if(MonoSingleton<OptionsManager>.Instance != null && !MonoSingleton<OptionsManager>.Instance.paused && MonoSingleton<FistControl>.Instance != null && !MonoSingleton<FistControl>.Instance.shopping && GameStateManager.Instance != null && !GameStateManager.Instance.PlayerInputLocked)
         {
             return false;
         }
@@ -181,28 +179,28 @@ public class Plugin : BaseUnityPlugin
     public Texture2D GetTextureByIndex(int i)
     {
         Texture2D texture = barTexture;
-        if(i == 0)       {texture = weapon_piercer.altVersion ? weapon_piercerAltTexture : weapon_piercerTexture;}
-        else if(i == 1)  {texture = weapon_marksman.altVersion ? weapon_marksmanAltTexture : weapon_marksmanTexture;}
-        else if(i == 2)  {texture = weapon_sharpshooter.altVersion ? weapon_sharpshooterAltTexture : weapon_sharpshooterTexture;}
+        if(i == 0 && weapon_piercer != null)           {texture = weapon_piercer.altVersion ? weapon_piercerAltTexture : weapon_piercerTexture;}
+        else if(i == 1 && weapon_marksman != null)     {texture = weapon_marksman.altVersion ? weapon_marksmanAltTexture : weapon_marksmanTexture;}
+        else if(i == 2 && weapon_sharpshooter != null) {texture = weapon_sharpshooter.altVersion ? weapon_sharpshooterAltTexture : weapon_sharpshooterTexture;}
         else if(i == 3)  {texture = weapon_piercerAltTexture;}
         else if(i == 4)  {texture = weapon_marksmanAltTexture;}
         else if(i == 5)  {texture = weapon_sharpshooterAltTexture;}
-        else if(i == 6)  {texture = weapon_sawedOn.GetComponent<ShotgunHammer>() == null ? weapon_sawedonTexture : weapon_sawedonAltTexture;} 
+        else if(i == 6 && weapon_sawedOn != null)  {texture = weapon_sawedOn.GetComponent<ShotgunHammer>() == null ? weapon_sawedonTexture : weapon_sawedonAltTexture;} 
         else if(i == 7)  {texture = weapon_coreejectAltTexture;}
         else if(i == 8)  {texture = weapon_pumpchargeAltTexture;}
         else if(i == 9)  {texture = weapon_sawedonAltTexture;}
-        else if(i == 10) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
-        else if(i == 11) {texture = weapon_overheat.altVersion ? weapon_overheatAltTexture : weapon_overheatTexture;}
-        else if(i == 12) {texture = weapon_jumpstart.altVersion ? weapon_jumpstartAltTexture : weapon_jumpstartTexture;}
-        else if(i == 13) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
+        else if(i == 10 && weapon_attractor != null) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
+        else if(i == 11 && weapon_overheat != null)  {texture = weapon_overheat.altVersion ? weapon_overheatAltTexture : weapon_overheatTexture;}
+        else if(i == 12 && weapon_jumpstart != null) {texture = weapon_jumpstart.altVersion ? weapon_jumpstartAltTexture : weapon_jumpstartTexture;}
+        else if(i == 13 && weapon_attractor != null) {texture = weapon_attractor.altVersion ? weapon_attractorAltTexture : weapon_attractorTexture;}
         else if(i == 14) {texture = weapon_railcannonTexture;}
         else if(i == 15) {texture = weapon_freezeframeTexture;}
         else if(i == 16) {texture = weapon_srsTexture;}
         else if(i == 17) {texture = weapon_firestarterTexture;}
         else if(i == 18) {texture = weapon_freezeframeTexture;}
         else if(i == 19) {texture = weapon_fistTexture;}
-        else if(i == 20) {texture = weapon_coreEject.GetComponent<ShotgunHammer>() == null ? weapon_coreejectTexture : weapon_coreejectAltTexture;}
-        else if(i == 21) {texture = weapon_pumpCharge.GetComponent<ShotgunHammer>() == null ? weapon_pumpchargeTexture : weapon_pumpchargeAltTexture;}
+        else if(i == 20 && weapon_coreEject != null)  {texture = weapon_coreEject.GetComponent<ShotgunHammer>() == null ? weapon_coreejectTexture : weapon_coreejectAltTexture;}
+        else if(i == 21 && weapon_pumpCharge != null) {texture = weapon_pumpCharge.GetComponent<ShotgunHammer>() == null ? weapon_pumpchargeTexture : weapon_pumpchargeAltTexture;}
         return texture;
     }
 
@@ -611,96 +609,134 @@ public class Plugin : BaseUnityPlugin
         //displaying stuff is handled in OnGUI
     }
 
+
+    public int[] getExtraXY(UltraCooldownInfoWeapon UCIWepConf)
+    {
+        int extraX = 0;
+        int extraY = 0;
+        if(MonoSingleton<GunControl>.Instance != null && MonoSingleton<GunControl>.Instance.currentWeapon != null)
+        {
+            Vector3 transformPosition = MonoSingleton<GunControl>.Instance.currentWeapon.transform.parent.transform.parent.GetChild(1).transform.localPosition; //this is a stupid way to get it but it works
+
+            extraX = -(int)(((transformPosition.x) * Screen.width) / (10 * PluginConfig.movingHUDAmount));
+            extraY = (int)(((transformPosition.y) * Screen.height) / (10 * PluginConfig.movingHUDAmount));
+
+            //now account for Z
+            //move closer to center of screen as z decreases
+            float xToCenterBase = (Screen.width / 2) - UCIWepConf.xPos; //right if positive
+            float yToCenterBase = (Screen.height / 2) - UCIWepConf.yPos; //up is negative
+
+            int extraXFromZ = (int)((xToCenterBase * -transformPosition.z) / (10 * PluginConfig.movingHUDAmount));
+            int extraYFromZ = (int)((yToCenterBase * -transformPosition.z) / (10 * PluginConfig.movingHUDAmount));
+
+            //prevent it from going to the other side of the screen for very high movingHUDAmount
+            if (transformPosition.z / (10 * PluginConfig.movingHUDAmount) > 1) {extraXFromZ = (int)xToCenterBase; extraYFromZ = (int)yToCenterBase;}
+            //if (transformPosition.z / (10 * PluginConfig.movingHUDAmount) < -1) {extraXFromZ = (int)-xToCenterBase; extraYFromZ = (int)-yToCenterBase;}
+
+            extraX += extraXFromZ;
+            extraY += extraYFromZ;
+        }
+        int[] arr = {extraX, extraY};
+        return arr;
+    }
+
     public void DrawClassicHUDElement(int i)
     {
-        if(tempDisable) {return;}
+        if (tempDisable) {return;}
         UltraCooldownInfoWeapon UCIWepConf = UltraCooldownInfoWeapons[i];
-        
-        if(UCIWepConf.flipped == true)
+        int extraX = 0;
+        int extraY = 0;
+        if (UCIWepConf.movingHUD)
         {
-            if(weapon.GetComponent<Revolver>() == weapon_sharpshooter && weapon_sharpshooter.altVersion == false && UltraCooldownInfoWeapons[i].chargeAmount >= 0.3333 && UltraCooldownInfoWeapons[i].usingChargeAmount > 0f) 
+            int[] arr = getExtraXY(UCIWepConf);
+            extraX = arr[0];
+            extraY = arr[1];
+        }
+        if (UCIWepConf.flipped == true)
+        {
+            if (weapon != null && weapon.GetComponent<Revolver>() == weapon_sharpshooter && weapon_sharpshooter.altVersion == false && UltraCooldownInfoWeapons[i].chargeAmount >= 0.3333 && UltraCooldownInfoWeapons[i].usingChargeAmount > 0f)
             { //special case; only weapon that both charges up and has multiple charges.
-                if(UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.995f)
+                if (UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.995f)
                 {
-                    UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
+                    UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
                 }
                 else
                 {
-                    UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width - UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.yPos, -UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].usingChargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, normalSharpshooterBackgroundChargingColor, 0, 0);
-                    UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width, UCIWepConf.yPos, -UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
+                    UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width - UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, extraY + UCIWepConf.yPos, -UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].usingChargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, normalSharpshooterBackgroundChargingColor, 0, 0);
+                    UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width, extraY + UCIWepConf.yPos, -UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
                 }
                 goto beforeDrawSegments;
             }
-            if(UltraCooldownInfoWeapons[i].chargeAmount >= 1)
+            if (UltraCooldownInfoWeapons[i].chargeAmount >= 1)
             {
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargedColor, 0, 0);
-                if(UltraCooldownInfoWeapons[i].usingChargeAmount > 0f) //not everything "charges". Things that dont will have negative values.
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargedColor, 0, 0);
+                if (UltraCooldownInfoWeapons[i].usingChargeAmount > 0f) //not everything "charges". Things that dont will have negative values.
                 {
-                    if(UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.99f)
+                    if (UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.99f)
                     {
-                        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
+                        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
                     }
                     else
                     {
-                        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width, UCIWepConf.yPos, -UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
+                        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width, extraY + UCIWepConf.yPos, -UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
                     }
                 }
             }
             else
             {
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width, UCIWepConf.yPos, -UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargingColor, 0, 0);
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width - UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, UCIWepConf.yPos, -UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].chargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.remainingColor, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width, extraY + UCIWepConf.yPos, -UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargingColor, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width - UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, extraY + UCIWepConf.yPos, -UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].chargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.remainingColor, 0, 0);
             }
-            beforeDrawSegments:;
+        beforeDrawSegments:;
         }
         else
-        {   
-            if(weapon.GetComponent<Revolver>() == weapon_sharpshooter && weapon_sharpshooter.altVersion == false && UltraCooldownInfoWeapons[i].chargeAmount >= 0.3333 && UltraCooldownInfoWeapons[i].usingChargeAmount > 0f) 
+        {
+            if (weapon != null && weapon.GetComponent<Revolver>() == weapon_sharpshooter && weapon_sharpshooter.altVersion == false && UltraCooldownInfoWeapons[i].chargeAmount >= 0.3333 && UltraCooldownInfoWeapons[i].usingChargeAmount > 0f)
             { //special case; only weapon that both charges up and has multiple charges.
-                if(UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.995f)
+                if (UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.995f)
                 {
-                    UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
+                    UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
                 }
                 else
                 {
-                    UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.yPos, UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].usingChargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, normalSharpshooterBackgroundChargingColor, 0, 0);
-                    UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
+                    UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.yPos, UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].usingChargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, normalSharpshooterBackgroundChargingColor, 0, 0);
+                    UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
                 }
                 goto beforeDrawSegments;
             }
-            if(UltraCooldownInfoWeapons[i].chargeAmount >= 1)
+            if (UltraCooldownInfoWeapons[i].chargeAmount >= 1)
             {
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargedColor, 0, 0);
-                if(UltraCooldownInfoWeapons[i].usingChargeAmount > 0f) //not everything "charges". Things that dont will have negative values.
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargedColor, 0, 0);
+                if (UltraCooldownInfoWeapons[i].usingChargeAmount > 0f) //not everything "charges". Things that dont will have negative values.
                 {
-                    if(UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.99f)
+                    if (UltraCooldownInfoWeapons[i].usingChargeAmount >= 0.99f)
                     {
-                        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
+                        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeChargedColor, 0, 0);
                     }
                     else
                     {
-                        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
+                        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width * UltraCooldownInfoWeapons[i].usingChargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.usingChargeColor, 0, 0);
                     }
                 }
             }
             else
             {
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos, UCIWepConf.yPos, UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargingColor, 0, 0);
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, UCIWepConf.yPos, UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].chargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.remainingColor, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos, extraY + UCIWepConf.yPos, UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.chargingColor, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * UltraCooldownInfoWeapons[i].chargeAmount, extraY + UCIWepConf.yPos, UCIWepConf.width * (1 - UltraCooldownInfoWeapons[i].chargeAmount), UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.remainingColor, 0, 0);
             }
-            beforeDrawSegments:;
+        beforeDrawSegments:;
         }
 
-        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness, UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.width + 2 * UCIWepConf.borderThickness , UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //top
-        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness, UCIWepConf.height + UCIWepConf.yPos, UCIWepConf.width + 2 * UCIWepConf.borderThickness , UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //bottom
-        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness, UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.borderThickness, UCIWepConf.height + 2 * UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //left
-        UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width, UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.borderThickness, UCIWepConf.height + 2 * UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //right
+        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos - UCIWepConf.borderThickness, extraY + UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.width + 2 * UCIWepConf.borderThickness, UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //top
+        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos - UCIWepConf.borderThickness, extraY + UCIWepConf.height + UCIWepConf.yPos, UCIWepConf.width + 2 * UCIWepConf.borderThickness, UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //bottom
+        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos - UCIWepConf.borderThickness, extraY + UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.borderThickness, UCIWepConf.height + 2 * UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //left
+        UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width, extraY + UCIWepConf.yPos - UCIWepConf.borderThickness, UCIWepConf.borderThickness, UCIWepConf.height + 2 * UCIWepConf.borderThickness), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0); //right
 
-        for(int j = 0; j < UCIWepConf.numberDivisions - 1; j++)
+        for (int j = 0; j < UCIWepConf.numberDivisions - 1; j++)
         {
-            UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.width * ((1.0f + j) / UCIWepConf.numberDivisions) - UCIWepConf.divisionWidth / 2, UCIWepConf.yPos, UCIWepConf.divisionWidth, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0);
+            UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * ((1.0f + j) / UCIWepConf.numberDivisions) - UCIWepConf.divisionWidth / 2, extraY + UCIWepConf.yPos, UCIWepConf.divisionWidth, UCIWepConf.height), barTexture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0);
         }
-        if(UCIWepConf.iconEnabled == true)
+        if (UCIWepConf.iconEnabled == true)
         {
             Color color = UCIWepConf.chargeBarIconColor;
 
@@ -713,45 +749,52 @@ public class Plugin : BaseUnityPlugin
             float iconWidth = 0f; float iconHeight = 0f;
 
             float flipXBonux = 0f;
-            if(UCIWepConf.flipped == true) {flipXBonux = 1f;}
-            if(UCIWepConf.iconSide == SideEnum.Left)
+            if (UCIWepConf.flipped == true) { flipXBonux = 1f; }
+            if (UCIWepConf.iconSide == SideEnum.Left)
             {
                 iconHeight = barHeight;
                 iconWidth = ((float)texture.width / texture.height) * barHeight;
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - iconWidth - UCIWepConf.iconDistance - UCIWepConf.borderThickness, UCIWepConf.yPos - UCIWepConf.borderThickness, iconWidth, barHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos - iconWidth - UCIWepConf.iconDistance - UCIWepConf.borderThickness, extraY + UCIWepConf.yPos - UCIWepConf.borderThickness, iconWidth, barHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
             }
-            else if(UCIWepConf.iconSide == SideEnum.Right)
+            else if (UCIWepConf.iconSide == SideEnum.Right)
             {
                 iconHeight = barHeight;
                 iconWidth = ((float)texture.width / texture.height) * barHeight;
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos + UCIWepConf.borderThickness + barWidth * 2 + UCIWepConf.iconDistance, UCIWepConf.yPos - UCIWepConf.borderThickness, -iconWidth, iconHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.borderThickness + barWidth * 2 + UCIWepConf.iconDistance, extraY + UCIWepConf.yPos - UCIWepConf.borderThickness, -iconWidth, iconHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
             }
-            else if(UCIWepConf.iconSide == SideEnum.Top)
+            else if (UCIWepConf.iconSide == SideEnum.Top)
             {
                 iconHeight = ((float)texture.height / texture.width) * barWidth;
                 iconWidth = barWidth;
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness + barWidth * flipXBonux, UCIWepConf.yPos - iconHeight - UCIWepConf.iconDistance - UCIWepConf.borderThickness, iconWidth * (1.0f - 2.0f * flipXBonux), iconHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos - UCIWepConf.borderThickness + barWidth * flipXBonux, extraY + UCIWepConf.yPos - iconHeight - UCIWepConf.iconDistance - UCIWepConf.borderThickness, iconWidth * (1.0f - 2.0f * flipXBonux), iconHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
             }
-            else if(UCIWepConf.iconSide == SideEnum.Bottom)
+            else if (UCIWepConf.iconSide == SideEnum.Bottom)
             {
                 iconHeight = ((float)texture.height / texture.width) * barWidth;
                 iconWidth = barWidth;
-                UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPos - UCIWepConf.borderThickness + barWidth * flipXBonux, UCIWepConf.yPos + barHeight + UCIWepConf.iconDistance - UCIWepConf.borderThickness, iconWidth * (1.0f - 2.0f * flipXBonux), iconHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
+                UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPos - UCIWepConf.borderThickness + barWidth * flipXBonux, extraY + UCIWepConf.yPos + barHeight + UCIWepConf.iconDistance - UCIWepConf.borderThickness, iconWidth * (1.0f - 2.0f * flipXBonux), iconHeight), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
             }
         }
     }
 
     public void DrawWeaponImageSplitHUDElement(int i)
     {
-        if(tempDisable) {return;}
+        if (tempDisable) { return; }
         UltraCooldownInfoWeapon UCIWepConf = UltraCooldownInfoWeapons[i];
+        int extraX = 0;
+        int extraY = 0;
+        if (UCIWepConf.movingHUD)
+        {
+            int[] arr = getExtraXY(UCIWepConf);
+            extraX = arr[0];
+            extraY = arr[1];
+        }
         Color color1 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //charging
         Color color2 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //remaining
         Color color3 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //charged
 
         float fillAmount = UCIWepConf.chargeAmount;
         if(UCIWepConf.chargeAmount >= 1 && UCIWepConf.usingChargeAmount >= 0f) {fillAmount = UCIWepConf.usingChargeAmount;}
-
         Texture2D texture = GetTextureByIndex(i);
 
         if(UCIWepConf.chargeAmount < 1)
@@ -780,67 +823,76 @@ public class Plugin : BaseUnityPlugin
             color3 = UCIWepConf.usingChargeChargedColor;
         }
 
-        if(UCIWepConf.flipped == false)
+        if (UCIWepConf.flipped == false)
         {
-            for(int j = 0; j < UCIWepConf.numberDivisions; j++)
+            for (int j = 0; j < UCIWepConf.numberDivisions; j++)
             {
                 float fraction = (j + 0.0f) / UCIWepConf.numberDivisions;
-                if(fillAmount * UCIWepConf.numberDivisions >= j + 1)
+                if (fillAmount * UCIWepConf.numberDivisions >= j + 1)
                 {
-                    GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                    GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                     GUI.DrawTexture(new Rect(-UCIWepConf.width * fraction, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color3, 0, 0);
                     GUI.EndGroup();
                 }
                 else
                 {
-                    GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (fillAmount - fraction), UCIWepConf.height * 1.0f));
+                    GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (fillAmount - fraction), UCIWepConf.height * 1.0f));
                     GUI.DrawTexture(new Rect(-UCIWepConf.width * fraction, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color1, 0, 0);
                     GUI.EndGroup();
                     break;
                 }
             }
-            GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fillAmount, UCIWepConf.yPos, UCIWepConf.width * 1.0f, UCIWepConf.height * 1.0f));
+            GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fillAmount, extraY + UCIWepConf.yPos, UCIWepConf.width * 1.0f, UCIWepConf.height * 1.0f));
             GUI.DrawTexture(new Rect(-UCIWepConf.width * fillAmount, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color2, 0, 0);
             GUI.EndGroup();
         }
         else //flipped 
         {
-            for(int j = 0; j < UCIWepConf.numberDivisions; j++)
+            for (int j = 0; j < UCIWepConf.numberDivisions; j++)
             {
                 float fraction = (j + 0.0f) / UCIWepConf.numberDivisions;
-                if(fillAmount * UCIWepConf.numberDivisions >= j + 1)
+                if (fillAmount * UCIWepConf.numberDivisions >= j + 1)
                 {
-                    GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                    GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                     GUI.DrawTexture(new Rect(UCIWepConf.width * (1.0f - fraction), 0, -UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color3, 0, 0);
                     GUI.EndGroup();
                 }
                 else
                 {
-                    GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (fillAmount - fraction), UCIWepConf.height * 1.0f));
+                    GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (fillAmount - fraction), UCIWepConf.height * 1.0f));
                     GUI.DrawTexture(new Rect(UCIWepConf.width * (1.0f - fraction), 0, -UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color1, 0, 0);
                     GUI.EndGroup();
                     break;
                 }
             }
-            GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fillAmount, UCIWepConf.yPos, UCIWepConf.width * 1.0f, UCIWepConf.height * 1.0f));
+            GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fillAmount, extraY + UCIWepConf.yPos, UCIWepConf.width * 1.0f, UCIWepConf.height * 1.0f));
             GUI.DrawTexture(new Rect(UCIWepConf.width * (1.0f - fillAmount), 0, -UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color2, 0, 0);
             GUI.EndGroup();
         }
-
-        if(UCIWepConf.divisionWidth == 0) {return;}
+    
+        if (UCIWepConf.divisionWidth == 0) {return;}
         for(int j = 0; j < UCIWepConf.numberDivisions - 1; j++) //draw lines
         {   //looks like crap but its here anyways
             float fraction = (j + 1.0f) / UCIWepConf.numberDivisions;
-            GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.divisionWidth, UCIWepConf.height * 1.0f));
+            GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.divisionWidth, UCIWepConf.height * 1.0f));
             GUI.DrawTexture(new Rect(-UCIWepConf.width * fraction, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0);
             GUI.EndGroup();
         }
+        
     }
 
     public void DrawWeaponImageGradientHUDElement(int i)
     {
         if(tempDisable) {return;}
         UltraCooldownInfoWeapon UCIWepConf = UltraCooldownInfoWeapons[i];
+        int extraX = 0;
+        int extraY = 0;
+        if (UCIWepConf.movingHUD)
+        {
+            int[] arr = getExtraXY(UCIWepConf);
+            extraX = arr[0];
+            extraY = arr[1];
+        }
         Color color1 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //charged
         Color color2 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //remaining
         Color color3 = new Color(1.0f, 1.0f, 1.0f, 1.0f); //in between
@@ -894,7 +946,7 @@ public class Plugin : BaseUnityPlugin
                 float fraction = (j + 0.0f) / UCIWepConf.numberDivisions;
                 if(fillAmount * UCIWepConf.numberDivisions >= j + 1)
                 {
-                    GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                    GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                     GUI.DrawTexture(new Rect(-UCIWepConf.width * fraction, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color1, 0, 0);
                     GUI.EndGroup();
                 }
@@ -902,14 +954,14 @@ public class Plugin : BaseUnityPlugin
                 {
                     if(drawnGradient)
                     {
-                        GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                        GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                         GUI.DrawTexture(new Rect(-UCIWepConf.width * fraction, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color2, 0, 0);
                         GUI.EndGroup();
                     }
                     else
                     {
                         drawnGradient = true;
-                        GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                        GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                         GUI.DrawTexture(new Rect(-UCIWepConf.width * fraction, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color3, 0, 0);
                         GUI.EndGroup();
                     }
@@ -923,7 +975,7 @@ public class Plugin : BaseUnityPlugin
                 float fraction = (j + 0.0f) / UCIWepConf.numberDivisions;
                 if(fillAmount * UCIWepConf.numberDivisions >= j + 1)
                 {
-                    GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                    GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                     GUI.DrawTexture(new Rect(UCIWepConf.width * (1.0f - fraction), 0, -UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color1, 0, 0);
                     GUI.EndGroup();
                 }
@@ -931,14 +983,14 @@ public class Plugin : BaseUnityPlugin
                 {
                     if(drawnGradient)
                     {
-                        GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                        GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                         GUI.DrawTexture(new Rect(UCIWepConf.width * (1.0f - fraction), 0, -UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color2, 0, 0);
                         GUI.EndGroup();
                     }
                     else
                     {
                         drawnGradient = true;
-                        GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
+                        GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.width * (1.0f / UCIWepConf.numberDivisions), UCIWepConf.height * 1.0f));
                         GUI.DrawTexture(new Rect(UCIWepConf.width * (1.0f - fraction), 0, -UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, color3, 0, 0);
                         GUI.EndGroup();
                     }
@@ -950,7 +1002,7 @@ public class Plugin : BaseUnityPlugin
         for(int j = 0; j < UCIWepConf.numberDivisions - 1; j++) //draw lines
         {   //looks like crap but its here anyways
             float fraction = (j + 1.0f) / UCIWepConf.numberDivisions;
-            GUI.BeginGroup(new Rect(UCIWepConf.xPos + UCIWepConf.width * fraction, UCIWepConf.yPos, UCIWepConf.divisionWidth, UCIWepConf.height * 1.0f));
+            GUI.BeginGroup(new Rect(extraX + UCIWepConf.xPos + UCIWepConf.width * fraction, extraY + UCIWepConf.yPos, UCIWepConf.divisionWidth, UCIWepConf.height * 1.0f));
             GUI.DrawTexture(new Rect(-UCIWepConf.width * fraction, 0, UCIWepConf.width, UCIWepConf.height), texture, ScaleMode.StretchToFill, true, 0, UCIWepConf.backgroundColor, 0, 0);
             GUI.EndGroup();
         }
@@ -958,6 +1010,14 @@ public class Plugin : BaseUnityPlugin
     public void tryDrawFlashingIcon(int i)
     {
         UltraCooldownInfoWeapon UCIWepConf = UltraCooldownInfoWeapons[i];
+        int extraX = 0;
+        int extraY = 0;
+        if (UCIWepConf.movingHUD)
+        {
+            int[] arr = getExtraXY(UCIWepConf);
+            extraX = arr[0];
+            extraY = arr[1];
+        }
         Color color = UCIWepConf.colorFlash;
         Texture2D texture = GetTextureByIndex(i);
 
@@ -974,11 +1034,11 @@ public class Plugin : BaseUnityPlugin
         if(UCIWepConf.flashType == FlashTypeEnum.LinearFade && flashingIconOpacities[i] > 0)
         {
             color = new Color(color.r, color.g, color.b, flashingIconOpacities[i]);
-            UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPosFlash + UCIWepConf.widthFlash * (1.0f - flipX) / 2f, UCIWepConf.yPosFlash, UCIWepConf.widthFlash * flipX, UCIWepConf.heightFlash), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
+            UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPosFlash + UCIWepConf.widthFlash * (1.0f - flipX) / 2f, extraY + UCIWepConf.yPosFlash, UCIWepConf.widthFlash * flipX, UCIWepConf.heightFlash), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
         }
         else if(UCIWepConf.flashType == FlashTypeEnum.NoFade && flashingIconOpacities[i] > 0)
         {
-            UnityEngine.GUI.DrawTexture(new Rect(UCIWepConf.xPosFlash + UCIWepConf.widthFlash * (1.0f - flipX) / 2f, UCIWepConf.yPosFlash, UCIWepConf.widthFlash * flipX, UCIWepConf.heightFlash), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
+            UnityEngine.GUI.DrawTexture(new Rect(extraX + UCIWepConf.xPosFlash + UCIWepConf.widthFlash * (1.0f - flipX) / 2f, extraY + UCIWepConf.yPosFlash, UCIWepConf.widthFlash * flipX, UCIWepConf.heightFlash), texture, ScaleMode.StretchToFill, true, 0, color, 0, 0);
         }
     }
     void OnGUI() //called every frame
