@@ -20,9 +20,9 @@ public class Plugin : BaseUnityPlugin
 {    
     public static Color[] GetVariantColors(float opacity, float colorDeepness)
     {
-        Color var0Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].b * colorDeepness);
-        Color var1Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].b * colorDeepness);
-        Color var2Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].b * colorDeepness);
+        Color var0Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[0].b * colorDeepness, opacity);
+        Color var1Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[1].b * colorDeepness, opacity);
+        Color var2Color = new Color(MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].r * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].g * colorDeepness, MonoSingleton<ColorBlindSettings>.Instance.variationColors[2].b * colorDeepness, opacity);
         Color[] arr = {var0Color, var1Color, var2Color};
         return arr;
     }

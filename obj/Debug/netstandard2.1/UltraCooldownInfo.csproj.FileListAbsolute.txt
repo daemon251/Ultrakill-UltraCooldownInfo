@@ -41,3 +41,5 @@ C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\bin\Debug\netstandard2.
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.1\UltraCoo.A55C022C.Up2Date
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.1\UltraCooldownInfo.dll
 C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\obj\Debug\netstandard2.1\UltraCooldownInfo.pdb
+C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\bin\Debug\netstandard2.1\Unity.Collections.dll
+C:\Users\willb\Documents\UltrakillMods\UltraCooldownInfo\bin\Debug\netstandard2.1\Unity.Collections.LowLevel.ILSupport.dll
