@@ -256,59 +256,68 @@ public class Plugin : BaseUnityPlugin
     {
         //Piercer Revolver Alt -- WORKS
         //The charge value is not kept track of by the game when it is out of the player hand, so we have to estimate it ourselves. The formula is copied over.
-        if(weapon.GetComponent<Revolver>() == weapon_piercer) 
+        if(weapon_piercer != null)
         {
-            UltraCooldownInfoWeapons[0].chargeAmount = weapon_piercer.pierceCharge / 100f; 
+            if(weapon.GetComponent<Revolver>() == weapon_piercer) 
+            {
+                UltraCooldownInfoWeapons[0].chargeAmount = weapon_piercer.pierceCharge / 100f; 
+            }
+            else
+            {
+                float num = 1f;
+                if(weapon_piercer.altVersion) {num = 0.5f;}
+                UltraCooldownInfoWeapons[0].chargeAmount += 40f * Time.deltaTime * num / 100f;
+                if(UltraCooldownInfoWeapons[0].chargeAmount >= 1f) {UltraCooldownInfoWeapons[0].chargeAmount = 1f;}
+            }
+            UltraCooldownInfoWeapons[0].usingChargeAmount = weapon_piercer.pierceShotCharge / 100f;
         }
-        else
-        {
-            float num = 1f;
-            if(weapon_piercer.altVersion) {num = 0.5f;}
-            UltraCooldownInfoWeapons[0].chargeAmount += 40f * Time.deltaTime * num / 100f;
-            if(UltraCooldownInfoWeapons[0].chargeAmount >= 1f) {UltraCooldownInfoWeapons[0].chargeAmount = 1f;}
-        }
-        UltraCooldownInfoWeapons[0].usingChargeAmount = weapon_piercer.pierceShotCharge / 100f;
 
         //Marksman Revolver Alt -- WORKS
         //the charge value is private in Revolver... this is a workaround
-        if(weapon.GetComponent<Revolver>() == weapon_marksman) 
+        if(weapon_marksman != null)
         {
-            float sum = 0f;
-            for(int i = 0; i < weapon_marksman.coinPanels.Length; i++)
+            if(weapon.GetComponent<Revolver>() == weapon_marksman) 
             {
-                sum += weapon_marksman.coinPanels[i].fillAmount; 
+                float sum = 0f;
+                for(int i = 0; i < weapon_marksman.coinPanels.Length; i++)
+                {
+                    sum += weapon_marksman.coinPanels[i].fillAmount; 
+                }
+                UltraCooldownInfoWeapons[1].chargeAmount = sum / weapon_marksman.coinPanels.Length; 
             }
-            UltraCooldownInfoWeapons[1].chargeAmount = sum / weapon_marksman.coinPanels.Length; 
+            else
+            {
+                UltraCooldownInfoWeapons[1].chargeAmount += (Time.deltaTime * 0.25f) / 4.0f;
+                if(UltraCooldownInfoWeapons[1].chargeAmount >= 1f) {UltraCooldownInfoWeapons[1].chargeAmount = 1f;}
+            }
+            UltraCooldownInfoWeapons[1].usingChargeAmount = -1f; 
         }
-        else
-        {
-            UltraCooldownInfoWeapons[1].chargeAmount += (Time.deltaTime * 0.25f) / 4.0f;
-            if(UltraCooldownInfoWeapons[1].chargeAmount >= 1f) {UltraCooldownInfoWeapons[1].chargeAmount = 1f;}
-        }
-        UltraCooldownInfoWeapons[1].usingChargeAmount = -1f; 
         
         //Sharpshooter Revolver Alt -- NEEDS WORK
         //the code for the sharpshooter is a mess, this is approximate.
-        if(weapon.GetComponent<Revolver>() == weapon_sharpshooter) 
+        if(weapon_sharpshooter != null)
         {
-            float sum = 0f;
-            for(int i = 0; i < weapon_sharpshooter.coinPanels.Length; i++)
+            if(weapon.GetComponent<Revolver>() == weapon_sharpshooter) 
             {
-                sum += weapon_sharpshooter.coinPanels[i].fillAmount; 
+                float sum = 0f;
+                for(int i = 0; i < weapon_sharpshooter.coinPanels.Length; i++)
+                {
+                    sum += weapon_sharpshooter.coinPanels[i].fillAmount; 
+                }
+                UltraCooldownInfoWeapons[2].chargeAmount = sum / weapon_sharpshooter.coinPanels.Length; 
             }
-            UltraCooldownInfoWeapons[2].chargeAmount = sum / weapon_sharpshooter.coinPanels.Length; 
-        }
-        else
-        {
-            float num2 = 0.85f;
-            if(weapon_sharpshooter.altVersion)
+            else
             {
-                num2 = 1.7f;
+                float num2 = 0.85f;
+                if(weapon_sharpshooter.altVersion)
+                {
+                    num2 = 1.7f;
+                }
+                UltraCooldownInfoWeapons[2].chargeAmount += ((Time.deltaTime / 5.0f) / 3) * num2;
+                if(UltraCooldownInfoWeapons[2].chargeAmount > 1f) {UltraCooldownInfoWeapons[2].chargeAmount = 1f;}
             }
-            UltraCooldownInfoWeapons[2].chargeAmount += ((Time.deltaTime / 5.0f) / 3) * num2;
-            if(UltraCooldownInfoWeapons[2].chargeAmount > 1f) {UltraCooldownInfoWeapons[2].chargeAmount = 1f;}
+            UltraCooldownInfoWeapons[2].usingChargeAmount = weapon_sharpshooter.pierceShotCharge / 100f;
         }
-        UltraCooldownInfoWeapons[2].usingChargeAmount = weapon_sharpshooter.pierceShotCharge / 100f;
 
         //Piercer Slab Fire -- WORKS
         UltraCooldownInfoWeapons[3].chargeAmount = (2.0f - MonoSingleton<WeaponCharges>.Instance.revaltpickupcharges[0]) / 2.0f;
@@ -390,41 +399,47 @@ public class Plugin : BaseUnityPlugin
     public void findNailgunValues()
     {
         //Attractor Nailgun Alt
-        if(weapon_attractor.wc == null) {UltraCooldownInfoWeapons[10].chargeAmount = 1.0f;}
-        else {UltraCooldownInfoWeapons[10].chargeAmount = weapon_attractor.wc.naiMagnetCharge / 3.0f;} //can be better
+        if(weapon_attractor != null)
+        {
+            if(weapon_attractor.wc == null) {UltraCooldownInfoWeapons[10].chargeAmount = 1.0f;}
+            else {UltraCooldownInfoWeapons[10].chargeAmount = weapon_attractor.wc.naiMagnetCharge / 3.0f;} //can be better
+        }
         UltraCooldownInfoWeapons[10].usingChargeAmount = -1f;
         //Overheat Nailgun Alt -- WORKS
         //this is pretty scuffed too, but I guess it works. You have to switch off (you can still switch back on again) the weapon for the meter to be read from the game... so...
-        if(weapon_overheat.altVersion == true)
+        if(weapon_overheat != null)
         {
-            if(MonoSingleton<WeaponCharges>.Instance.naiSawHeatsinks - 1f < 0.001 && weapon.GetComponent<Nailgun>() == weapon_overheat)
+            if(weapon_overheat.altVersion == true)
             {
-                if(!MonoSingleton<InputManager>.Instance.InputSource.Fire1.IsPressed) {UltraCooldownInfoWeapons[11].chargeAmount += Time.deltaTime / 8.03f;}
-                if(UltraCooldownInfoWeapons[11].chargeAmount >= 1) 
-                {   //if the weapon was fired, deplete the meter.
-                    if(weapon_overheat.canShoot && !weapon_overheat.burnOut && MonoSingleton<InputManager>.Instance.InputSource.Fire2.WasPerformedThisFrame && (double) weapon_overheat.heatUp >= 0.1) {UltraCooldownInfoWeapons[11].chargeAmount = 0;}
-                    else {UltraCooldownInfoWeapons[11].chargeAmount = 1;}
+                if(MonoSingleton<WeaponCharges>.Instance.naiSawHeatsinks - 1f < 0.001 && weapon.GetComponent<Nailgun>() == weapon_overheat)
+                {
+                    if(!MonoSingleton<InputManager>.Instance.InputSource.Fire1.IsPressed) {UltraCooldownInfoWeapons[11].chargeAmount += Time.deltaTime / 8.03f;}
+                    if(UltraCooldownInfoWeapons[11].chargeAmount >= 1) 
+                    {   //if the weapon was fired, deplete the meter.
+                        if(weapon_overheat.canShoot && !weapon_overheat.burnOut && MonoSingleton<InputManager>.Instance.InputSource.Fire2.WasPerformedThisFrame && (double) weapon_overheat.heatUp >= 0.1) {UltraCooldownInfoWeapons[11].chargeAmount = 0;}
+                        else {UltraCooldownInfoWeapons[11].chargeAmount = 1;}
+                    }
+                }
+                else
+                {
+                    UltraCooldownInfoWeapons[11].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiSawHeatsinks; //only works if you switch off?
                 }
             }
             else
             {
-                UltraCooldownInfoWeapons[11].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiSawHeatsinks; //only works if you switch off?
-            }
-        }
-        else
-        {
-            if(MonoSingleton<WeaponCharges>.Instance.naiHeatsinks - 2f < 0.001 && weapon.GetComponent<Nailgun>() == weapon_overheat)
-            {
-                if(!MonoSingleton<InputManager>.Instance.InputSource.Fire1.IsPressed) {UltraCooldownInfoWeapons[11].chargeAmount += Time.deltaTime / (2 * 8.03f);}
-                if(UltraCooldownInfoWeapons[11].chargeAmount >= 0.5) 
-                {   //if the weapon was fired, deplete the meter.
-                    if(weapon_overheat.canShoot && !weapon_overheat.burnOut && MonoSingleton<InputManager>.Instance.InputSource.Fire2.WasPerformedThisFrame && weapon_overheat.heatUp >= 0.1) {UltraCooldownInfoWeapons[11].chargeAmount += -0.5f;}
-                    else if(UltraCooldownInfoWeapons[11].chargeAmount >= 1.0f) {UltraCooldownInfoWeapons[11].chargeAmount = 1;}
+                if(MonoSingleton<WeaponCharges>.Instance.naiHeatsinks - 2f < 0.001 && weapon.GetComponent<Nailgun>() == weapon_overheat)
+                {
+                    if(!MonoSingleton<InputManager>.Instance.InputSource.Fire1.IsPressed) {UltraCooldownInfoWeapons[11].chargeAmount += Time.deltaTime / (2 * 8.03f);}
+                    if(UltraCooldownInfoWeapons[11].chargeAmount >= 0.5) 
+                    {   //if the weapon was fired, deplete the meter.
+                        if(weapon_overheat.canShoot && !weapon_overheat.burnOut && MonoSingleton<InputManager>.Instance.InputSource.Fire2.WasPerformedThisFrame && weapon_overheat.heatUp >= 0.1) {UltraCooldownInfoWeapons[11].chargeAmount += -0.5f;}
+                        else if(UltraCooldownInfoWeapons[11].chargeAmount >= 1.0f) {UltraCooldownInfoWeapons[11].chargeAmount = 1;}
+                    }
                 }
-            }
-            else
-            {
-                UltraCooldownInfoWeapons[11].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiHeatsinks / 2.0f; //only works if you switch off?
+                else
+                {
+                    UltraCooldownInfoWeapons[11].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiHeatsinks / 2.0f; //only works if you switch off?
+                }
             }
         }
 
@@ -442,22 +457,28 @@ public class Plugin : BaseUnityPlugin
         //Jumpstart Nailgun Alt
         UltraCooldownInfoWeapons[12].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiZapperRecharge / 5.0f; 
         
-        if(weapon_jumpstart.currentZapper == null)
+        if(weapon_jumpstart != null)
         {
-            UltraCooldownInfoWeapons[12].usingChargeAmount = 0f;
-        }
-        else
-        {
-            UltraCooldownInfoWeapons[12].usingChargeAmount = weapon_jumpstart.currentZapper.charge / 5.0f;
+            if(weapon_jumpstart.currentZapper == null)
+            {
+                UltraCooldownInfoWeapons[12].usingChargeAmount = 0f;
+            }
+            else
+            {
+                UltraCooldownInfoWeapons[12].usingChargeAmount = weapon_jumpstart.currentZapper.charge / 5.0f;
+            }
         }
         //Attractor Nailgun Fire
-        if(weapon_attractor.altVersion == true)
+        if(weapon_attractor != null)
         {
-            UltraCooldownInfoWeapons[13].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiSaws / 10.0f;
-        }
-        else
-        {
-            UltraCooldownInfoWeapons[13].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiAmmo / 100.0f;
+            if(weapon_attractor.altVersion == true)
+            {
+                UltraCooldownInfoWeapons[13].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiSaws / 10.0f;
+            }
+            else
+            {
+                UltraCooldownInfoWeapons[13].chargeAmount = MonoSingleton<WeaponCharges>.Instance.naiAmmo / 100.0f;
+            }
         }
 
         UltraCooldownInfoWeapons[13].usingChargeAmount = -1f;
@@ -477,7 +498,7 @@ public class Plugin : BaseUnityPlugin
         UltraCooldownInfoWeapons[15].usingChargeAmount = -1f;
         //S.R.S. Rocket Launcher Alt
         UltraCooldownInfoWeapons[16].chargeAmount = MonoSingleton<WeaponCharges>.Instance.rocketCannonballCharge; 
-        UltraCooldownInfoWeapons[16].usingChargeAmount = weapon_srs.cbCharge;
+        if(weapon_srs != null) {UltraCooldownInfoWeapons[16].usingChargeAmount = weapon_srs.cbCharge;}
         //Firestarter Rocket Launcher Alt -- WORKS
         UltraCooldownInfoWeapons[17].chargeAmount = MonoSingleton<WeaponCharges>.Instance.rocketNapalmFuel;  
         UltraCooldownInfoWeapons[17].usingChargeAmount = -1f;
