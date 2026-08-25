@@ -1,8 +1,13 @@
 # WARNING
 
-This mod is in development. Expect issues. Raise an issue on the github or ontact me at discord: daemon8363, preferrably in #ultrakill-modding if you encounter problems.
+**The default config does nothing. In the github repository, a minimalist config is present in the exampleConfigs folder if you want something that works out of the box.**
+The config is to be placed in a folder that probably looks about like this: ``.../YOURMODMANAGER/ULTRAKILL/profiles/Default/BepInEx/config/PluginConfigurator``
 
-Mod updates will reset any of the custom sounds that you use for the mod. Keep a seperate copy.
+Updated for FRAUD. As of writing, you *must* have HideManagerGameObject set to true in BepInEx.cfg.
+
+Raise an issue on the github if you encounter problems.
+
+Mod updates will reset any of the custom sounds that you use for the mod. Keep a seperate copy of your sounds if using.
 
 # OVERVIEW
 
